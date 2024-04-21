@@ -76,7 +76,9 @@ public:
 	void flightControlSystem();
 
 
+	void thrustTiltFunction();
 
+	void hoverThrustFunction();
 
 	//----------Cockpit-Shaker--------------------------
 	void calculateShake(double& dt);
@@ -132,6 +134,9 @@ private:
 	double m_r_thrustForce_y = 0.0;
 	double m_l_thrustForce_z = 0.0;
 	double m_r_thrustForce_z = 0.0;
+	double m_thrustTilt = 0.0;
+	double m_minusThrust = 0.0;
+	double m_plusThrust = 0.0;
 	double m_eng_vector_pitch_l = 0.0;
 	double m_eng_vector_pitch_r = 0.0;
 	double m_eng_vector_yaw = 0.0;

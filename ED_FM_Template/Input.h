@@ -114,6 +114,9 @@ enum Command
 
 	COMMAND_LAUNCH_BAR_TGL = 1012,
 
+	COMMAND_TILT_ENGINE_NOZZLE_TGL_PLS = 660, //iCommandPlaneLeftMFD_OSB19	660
+	COMMAND_TILT_ENGINE_NOZZLE_TGL_MNS = 661, //iCommandPlaneLeftMFD_OSB20	661
+
 	COMMAND_BAYDOORS_TOGGLE = 655,//iCommandPlaneLeftMFD_OSB14
 
 	COMMAND_AUTOPILOT_ATT_HOLD = 386,//62,
@@ -558,6 +561,8 @@ public:
 		m_refuelingDoorTgl = 0.0;
 
 		m_launchBarToggle = 0.0;
+
+		m_nozzleTiltTgl = 0.0;
 
 		m_bayDoorToggle = 0.0;
 	}
@@ -1424,6 +1429,34 @@ public:
 		return m_launchBarToggle;
 	}
 
+	inline const void tiltEngineNozzleTGLPLUS()
+	{
+		if (m_nozzleTiltTgl <= 0.5)//if (m_nozzleTiltTgl <= 0.8)
+		{
+			m_nozzleTiltTgl += 0.1;//m_nozzleTiltTgl += 0.20;
+		}
+		else
+		{
+			m_nozzleTiltTgl = 0.6;
+		}
+	}
+
+	inline const void tiltEngineNozzleTGLMINUS()
+	{
+		if (m_nozzleTiltTgl >= 0.20)//if (m_nozzleTiltTgl >= 0.40)
+		{
+			m_nozzleTiltTgl -= 0.1;//m_nozzleTiltTgl -= 0.20;
+		}
+		else
+		{
+			m_nozzleTiltTgl = 0.0;
+		}
+	}
+
+	inline const double getTiltEngineNozzle()
+	{
+		return m_nozzleTiltTgl;
+	}
 
 	inline const void bayDoorsOpenClose()
 	{
@@ -2021,6 +2054,8 @@ private:
 	double m_refuelingDoorTgl = 0.0;
 
 	double m_launchBarToggle = 0.0;
+
+	double m_nozzleTiltTgl = 0.0;
 
 	double m_bayDoorToggle = 0.0;
 

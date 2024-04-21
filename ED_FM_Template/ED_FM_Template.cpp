@@ -668,6 +668,22 @@ void ed_fm_set_command(int command,
 	case COMMAND_REFUELING_DOOR_TGL:
 		s_input->refuelingDoorTgl();
 		break;
+
+	case COMMAND_LAUNCH_BAR_TGL:
+		s_input->launchBarToggle();
+		break;
+
+	case COMMAND_TILT_ENGINE_NOZZLE_TGL_PLS:
+		s_input->tiltEngineNozzleTGLPLUS();
+		break;
+
+	case COMMAND_TILT_ENGINE_NOZZLE_TGL_MNS:
+		s_input->tiltEngineNozzleTGLMINUS();
+		break;
+
+	case COMMAND_BAYDOORS_TOGGLE:
+		s_input->bayDoorsOpenClose();
+		break;
 	case Battery:
 	case k_Battery:
 	case LeftAcGenerator:
@@ -1022,8 +1038,13 @@ void ed_fm_set_draw_args(EdDrawArgument* drawargs, size_t size)
 	drawargs[90].f = s_airframe->getNozzle2Position();//Engine2 Nozzle Position 1 - 0 - 1 左喷口动画
 	//drawargs[182].f = s_airframe->getSpeedBrakePosition();//airbrake #1
 	//drawargs[184].f = s_airframe->getSpeedBrakePosition();//airbrake #2
+	drawargs[290].f = s_airframe->getTopRotorClap();// 290 ist Top-Klappe Unten --升力风扇
+	drawargs[291].f = s_airframe->getWingNozzles();// 291 sind die Fl黦elD黶en --机翼喷口
+	drawargs[292].f = s_airframe->getTiltEngineNozzlePosition();// 292 ist die HeckD黶e !!DAS STIMMT SO!! --尾喷向下偏转
 	drawargs[325].f = s_engine->getLeftFanAnimationValue();
 	drawargs[324].f = s_engine->getRightFanAnimationValue();
+	drawargs[401].f = s_airframe->getWingFoldMechanics();//Wing-Tip-Folding Mechanics anstatt Arg.Nr.8
+	drawargs[402].f = s_airframe->getHookPosition();//Hook Position statt 402 wider 25
 	drawargs[515].f = s_flightModel->getVectorPitchR();
 	drawargs[516].f = s_flightModel->getVectorPitchL();
 	drawargs[517].f = s_flightModel->getVectorYaw();

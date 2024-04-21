@@ -102,6 +102,18 @@ public:
 	double setNozzlePosition(double dt); //verschoben nach Airframe CPP wegen der Größe
 	double setNozzle2Position(double dt); //verschoben nach Airframe CPP wegen der Größe
 
+	//Tilt Engine Nozzle Mechanik----------------------------
+	void tiltNozzleFunction();
+	inline double setTiltEngineNozzlePosition(double dt);
+	inline double getTiltEngineNozzlePosition();
+	inline double setTopRotorClap(double dt);
+	inline double getTopRotorClap();
+	inline double setBottomRotorClap(double dt);
+	inline double getBottomRotorClap();
+	inline double setWingNozzles(double dt);
+	inline double getWingNozzles();
+
+
 	//intern FC3 Cockpit-Stuff
 	double getIntThrottlePosition();
 	double getIntThrottlePosition2();
@@ -621,6 +633,16 @@ private:
 	double m_chuteZAxis = 0.0;
 	//------------------------------------------------
 
+	double m_nozzleTilt = 0.0;
+	double m_nozzleTiltPosition = 0.0;
+	double m_tiltNozzleOverSpeed = 0.0;
+	double m_rotorTopClap = 0.0;
+	double m_rotorTopClapPosition = 0.0;
+	double m_rotorBottomClap = 0.0;
+	double m_rotorBottomClapPosition = 0.0;
+	double m_wingNozzle = 0.0;
+	double m_wingNozzlePosition = 0.0;
+
 
 	double m_bayDoorToggle = 0.0;
 
@@ -962,6 +984,52 @@ double Airframe::setChutePositionZ(double dt)
 	double input = brkChuteSlewZ();
 	return m_actuatorChuteZ.inputUpdate(input, dt);
 }
+//--------------VTOL DÜSEN POSITIONS-------------------
+
+double Airframe::setTiltEngineNozzlePosition(double dt)
+{
+	double input = m_nozzleTiltPosition;
+	return m_actuatorTiltNozzle.inputUpdate(input, dt);
+}
+
+double Airframe::getTiltEngineNozzlePosition()
+{
+	return m_nozzleTilt; // 0.0; 0.2; 0.4; 0.6; 0.8; 1.0;
+}
+
+double Airframe::setTopRotorClap(double dt)
+{
+	double input = m_rotorTopClapPosition;
+	return m_actuatorRotorTopClap.inputUpdate(input, dt);
+}
+
+double Airframe::getTopRotorClap()
+{
+	return m_rotorTopClap;
+}
+
+double Airframe::setBottomRotorClap(double dt)
+{
+	double input = m_rotorBottomClapPosition;
+	return m_actuatorRotorBottomClap.inputUpdate(input, dt);
+}
+
+double Airframe::getBottomRotorClap()
+{
+	return m_rotorBottomClap;
+}
+
+double Airframe::setWingNozzles(double dt)
+{
+	double input = m_wingNozzlePosition;
+	return m_actuatorWingNozzles.inputUpdate(input, dt);
+}
+
+double Airframe::getWingNozzles()
+{
+	return m_wingNozzle;
+}
+
 //-----------------------------------------------------
 
 

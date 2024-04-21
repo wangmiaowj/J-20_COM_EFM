@@ -191,6 +191,16 @@ void Airframe::zeroInit()
 	//----------Nozzle Stuff-------
 	m_nozzlePosition = 0.0;
 	m_nozzle2Position = 0.0;
+	m_nozzleTilt = 0.0;
+	m_nozzleTiltPosition = 0.0;
+	m_tiltNozzleOverSpeed = 0.0;
+
+	m_rotorTopClap = 0.0;
+	m_rotorTopClapPosition = 0.0;
+	m_rotorBottomClap = 0.0;
+	m_rotorBottomClapPosition = 0.0;
+	m_wingNozzle = 0.0;
+	m_wingNozzlePosition = 0.0;
 	//-----------------------------
 
 	m_int_throttlePos = 0.0;
@@ -462,6 +472,11 @@ void Airframe::airframeUpdate(double dt)
 
 	m_refuelingDoorToggle = setRefuelingDoor(dt);
 
+	m_nozzleTilt = setTiltEngineNozzlePosition(dt);
+	m_rotorTopClap = setTopRotorClap(dt);
+	m_rotorBottomClap = setBottomRotorClap(dt);
+	m_wingNozzle = setWingNozzles(dt);
+
 	m_bayDoorToggle = setBayDoorsPosition(dt);
 
 
@@ -528,6 +543,7 @@ void Airframe::airframeUpdate(double dt)
 	catapultCalculations(dt);
 	launchBarCalc();
 	autoDriveLeFlapPosition();
+	tiltNozzleFunction();
 
 	electricSystem();
 	bitProgram(dt);
@@ -600,6 +616,7 @@ void Airframe::airframeUpdate(double dt)
 	params[HUD_FLAP].tgText = flap.c_str();
 	params[leftThrottle].tg = getIntThrottlePosition();
 	params[rightThrottle].tg = getIntThrottlePosition2();
+	params[ENG_DIRECTION].tg = getTiltEngineNozzlePosition();
 	if (m_engine.getRPMNorm() < 0.675 && m_engine.getRPMNorm2() < 0.675)
 	{
 		params[ENG_THRUST_SPORT].tg = 0.0;
@@ -848,6 +865,90 @@ double Airframe::setNozzle2Position(double dt) //Nozzle-Position 0-10% Thrust op
 	double input = NozzlePos;
 	return m_actuatorNozzle.inputUpdate(input, dt);
 }
+
+//----------TiltNozzle Function for Speed----------------------------------------
+
+void Airframe::tiltNozzleFunction()
+{
+	bool VTOLinAction = false;
+	double NozzleFinalTilt = 0.0;
+
+	if (m_input.getTiltEngineNozzle() > 0.0)
+	{
+		VTOLinAction = true;
+	}
+	else
+	{
+		VTOLinAction = false;
+	}
+
+	if (m_input.getTiltEngineNozzle() == 0.2)
+	{
+		NozzleFinalTilt = 0.2;
+	}
+	else if (m_input.getTiltEngineNozzle() == 0.3)
+	{
+		NozzleFinalTilt = 0.4;
+	}
+	else if (m_input.getTiltEngineNozzle() == 0.4)
+	{
+		NozzleFinalTilt = 0.6;
+	}
+	else if (m_input.getTiltEngineNozzle() == 0.5)
+	{
+		NozzleFinalTilt = 0.8;
+	}
+	else if (m_input.getTiltEngineNozzle() == 0.6)
+	{
+		NozzleFinalTilt = 1.0;
+	}
+	else
+	{
+		NozzleFinalTilt = 0.0;
+	}
+
+	if (m_state.m_mach > 0.45)
+	{
+		m_tiltNozzleOverSpeed = 1.0;
+	}
+	else
+	{
+		m_tiltNozzleOverSpeed = 0.0;
+	}
+
+
+	if ((m_tiltNozzleOverSpeed == 0.0) && (VTOLinAction == true))
+	{
+		m_rotorTopClapPosition = 0.1;
+	}
+	else
+	{
+		m_rotorTopClapPosition = 0.0;
+
+	}
+
+	if ((m_tiltNozzleOverSpeed == 0.0) && (getTopRotorClap() >= 0.07) && (VTOLinAction == true))
+	{
+		m_wingNozzlePosition = 0.1;
+	}
+	else
+	{
+		m_wingNozzlePosition = 0.0;
+	}
+
+	if ((getWingNozzles() == 0.1) && (getTopRotorClap() == 0.1) && (VTOLinAction == true))
+	{
+		m_nozzleTiltPosition = NozzleFinalTilt;//m_input.getTiltEngineNozzle();
+	}
+	else
+	{
+		m_nozzleTiltPosition = 0.0;
+	}
+
+	//printf("m_tiltNozzleOverSpeed %f\n", m_tiltNozzleOverSpeed);
+	//printf("TiltNozzle_Input %f\n", m_input.getTiltEngineNozzle());
+}
+
 
 //------------Internal Throttle Position lassen wir erstmal so-------------------
 double Airframe::getIntThrottlePosition()

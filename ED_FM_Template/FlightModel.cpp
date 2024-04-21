@@ -260,6 +260,10 @@ void FlightModel::zeroInit()
 
 	gearShake = false;
 	prevGearShake = false;
+
+	m_thrustTilt = 0.0;
+	m_minusThrust = 0.0;
+	m_plusThrust = 0.0;
 	m_pitchAdjustFBW = 0.0;
 
 	m_pitchHoverThrust = 0.0;
@@ -383,7 +387,7 @@ void FlightModel::L_stab()
 		//----------m_stallIndRoll verringert auf (s.u.)-----------------------------------------------------------------------------------
 		//----------Multiplikator vor m_stallMult von 0.5 auf 0.33
 	m_moment.x += m_q * ((Clb_b * m_corrBeta) + ((1.7 * Clda_b) * ((((m_elec.isAC() ? m_input.getRoll() : 0) * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD)) + ((0.55 * Cldr_b) * ((m_elec.isAC() ? m_input.getYaw() : 0) * m_rudDeflection)))
-		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (((1.35 * Clp_b) * m_state.m_omega.x) + ((1.15 * Clr_b) * m_state.m_omega.y));
+		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (((1.35 * Clp_b) * m_state.m_omega.x) + ((1.15 * Clr_b) * m_state.m_omega.y)) + m_rollHoverThrust;
 }
 
 void FlightModel::M_stab()
@@ -406,7 +410,7 @@ void FlightModel::M_stab()
 	//----------------NEUE Version mit Ausschlagsbeschränkung auf max Ausschlag Backstick--------------Cm bleibt unberhürt von der Rotation-----------------------------------------------------------------------------------
 	double d1 = 1.0;
 	m_moment.z += m_k * CON_mac * ((((d1 * CmalphaNEW(m_state.m_mach) * m_cmaMultiFBW) * m_inducedPitZ) * m_corrAoA) + (d1 * -CmdeNEW(m_state.m_mach) * ((((((m_elec.isAC() ? m_input.getPitch() : 0) * m_elevDeflection)) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH() + m_autoPilot.getAutoPitch() + m_autoPilot.getFBWPitch()) * m_pitchReduceAoA) + m_stickKicker) * m_hStabDamage) + (0.70 * CmFlap(m_state.m_mach) * m_airframe.getFlapsPosition()))
-		+ 1 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * (((1.00 * (Cmq(m_state.m_mach) * m_cmqMultiFBW) + (m_cmqMultiFBW * m_CmqStAg)) * m_state.m_omega.z) + (((1.00 * (m_cmqMultiFBW * CmadotNEW(m_state.m_mach))) + (m_cmqMultiFBW * m_CmaDOTStAg)) * m_aoaDot));
+		+ 1 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * (((1.00 * (Cmq(m_state.m_mach) * m_cmqMultiFBW) + (m_cmqMultiFBW * m_CmqStAg)) * m_state.m_omega.z) + (((1.00 * (m_cmqMultiFBW * CmadotNEW(m_state.m_mach))) + (m_cmqMultiFBW * m_CmaDOTStAg)) * m_aoaDot)) + m_pitchHoverThrust;
 
 }
 
@@ -436,7 +440,7 @@ void FlightModel::N_stab()
 	//--------von: ((3.1 - (1.25 * m_stallMult)) * Cnr_b * m_state.m_omega.y)) zu ((3.5 - (1.25 * m_stallMult)) * Cnr_b * m_state.m_omega.y))
 	//----von ((1.6 * -Cndr_b) * (-m_input.getYaw() * m_rudDeflection)) -> ((1.2 * -Cndr_b) * (-m_input.getYaw() * m_rudDeflection))// 
 	m_moment.y += m_q * (((3.1 * -Cnb_b) * m_corrBeta) + ((-Cnda_b * ((m_elec.isAC() ? m_input.getRoll() : 0) * m_ailDeflection)) * m_CnpStab) + ((1.2 * -Cndr_b) * (m_elec.isAC() ? -m_input.getYaw() : 0 * m_rudDeflection)))
-		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (((1.8 - (1.15 * m_stallMult)) * (Cnp_b * m_state.m_omega.x)) + ((3.5 - (1.25 * m_stallMult)) * Cnr_b * m_state.m_omega.y));
+		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (((1.8 - (1.15 * m_stallMult)) * (Cnp_b * m_state.m_omega.x)) + ((3.5 - (1.25 * m_stallMult)) * Cnr_b * m_state.m_omega.y)) + m_yawHoverThrust;
 }
 
 
@@ -489,7 +493,7 @@ void FlightModel::l_thrustForce()
 	//----------------------------------------------------------------------------------------------------------
 
 	//------------------neue Formel bei der die Thrust-Force NACH der Rotation hinzugefügt wird-----------------
-	m_l_thrustForce = ((m_engine.updateThrust() + m_l_addThrust) * m_airframe.getEngineDamageMult() * m_thinAirMulti) * (1 + m_spec * 3);
+	m_l_thrustForce = ((m_engine.updateThrust() + m_l_addThrust) * m_airframe.getEngineDamageMult() * m_thinAirMulti) * m_minusThrust * (1 + m_spec * 3);
 
 }
 
@@ -505,7 +509,7 @@ void FlightModel::r_thrustForce()
 	//----------------------------------------------------------------------------------------------------------
 
 	//------------------neue Formel bei der die Thrust-Force NACH der Rotation hinzugefügt wird-----------------
-	m_r_thrustForce = ((m_engine.updateThrust2() + m_r_addThrust) * m_airframe.getEngineDamageMultR() * m_thinAirMulti) * (1 + m_spec * 3);
+	m_r_thrustForce = ((m_engine.updateThrust2() + m_r_addThrust) * m_airframe.getEngineDamageMultR() * m_thinAirMulti) * m_minusThrust * (1 + m_spec * 3);
 
 }
 
@@ -659,10 +663,16 @@ void FlightModel::pitchStabSystem()
 	//now we are getting serious
 	if (m_wingStalling == false)
 	{
-		if (((m_airframe.getCompressorDamage() >= 0.35) && (hasElectricEnergy == true)))
+		if (((m_airframe.getCompressorDamage() >= 0.35) && (hasElectricEnergy == true)) && (m_airframe.getTiltEngineNozzlePosition() <= 0.4))
 		{
 			m_CmqStAg = 1.8 * (CmqStAg(m_state.m_mach));//1.2 - 1.8
 			m_CmaDOTStAg = 1.8 * (CmaDOTStAg(m_state.m_mach));//1.2 -> 1.8
+			m_pitchStabSystem = 1.0;
+		}
+		else if (((m_airframe.getCompressorDamage() >= 0.35) && (hasElectricEnergy == true)) && (m_airframe.getTiltEngineNozzlePosition() > 0.4))
+		{
+			m_CmqStAg = CmqStAg(m_state.m_mach);
+			m_CmaDOTStAg = CmaDOTStAg(m_state.m_mach);
 			m_pitchStabSystem = 1.0;
 		}
 		else if ((m_airframe.getCompressorDamage() < 0.35) && (m_elec.isDC()))
@@ -737,10 +747,19 @@ void FlightModel::yawStabSystem()
 	//now we are getting serious
 	if (m_wingStalling == false)
 	{
-		if (((m_airframe.getCompressorDamage() >= 0.35) && (hasElectricEnergy == true)))
+		if (((m_airframe.getCompressorDamage() >= 0.35) && (hasElectricEnergy == true)) && (m_airframe.getTiltEngineNozzlePosition() <= 0.4))
 		{
 			m_CnrStab = 2.8 * CnStab(2.1);//CnStab(2.1); 1.0 -> 1.5 -> 1.9 -> 2.4 -> 2.8
 			m_CnpStab = 0.05; //einfach als Multiplikator für Yaw-due-to-roll und yaw-due-to-aileron// war 0.25 -> 0.15 -> 0.11 -> 0.09 -> 0.05
+			//m_StabAugSys = 0.5;
+			m_yawStabSystem = 1.0;
+			m_CybStab = 0.25; //multiplier for Cyb sideforce due to beta
+		}
+		else if (((m_airframe.getCompressorDamage() >= 0.35) && (hasElectricEnergy == true)) && (m_airframe.getTiltEngineNozzlePosition() > 0.4))
+		{
+
+			m_CnrStab = (2.2 * CnStab(2.1));//-0.145 ist einer der größten StabiWerte in der CnStab-Skala bei Mach 2.1
+			m_CnpStab = 0.08; //einfach als Multiplikator für Yaw-due-to-roll und yaw-due-to-aileron// war 0.25 -> 0.15 -> 0.11 -> 0.08
 			//m_StabAugSys = 0.5;
 			m_yawStabSystem = 1.0;
 			m_CybStab = 0.25; //multiplier for Cyb sideforce due to beta
@@ -833,10 +852,17 @@ void FlightModel::rollStabSystem()
 	//now we are getting serious
 	if (m_wingStalling == false)
 	{
-		if (((m_airframe.getCompressorDamage() >= 0.35) && (hasElectricEnergy == true)))
+		if (((m_airframe.getCompressorDamage() >= 0.35) && (hasElectricEnergy == true)) && (m_airframe.getTiltEngineNozzlePosition() <= 0.4))
 		{
 			m_ClrStab = (ClrStab(m_state.m_mach));
 			m_ClpStab = 1.35 * (ClpStab(m_state.m_mach));// 
+			m_rollStabSystem = 1.0;
+		}
+		else if (((m_airframe.getCompressorDamage() >= 0.35) && (hasElectricEnergy == true)) && (m_airframe.getTiltEngineNozzlePosition() > 0.4))
+		{
+
+			m_ClrStab = 1.25 * ClrStab(m_state.m_mach); //more roll-stability in hover-mode
+			m_ClpStab = 2.25 * (ClpStab(m_state.m_mach));// 2.25 ->
 			m_rollStabSystem = 1.0;
 		}
 		else if ((m_airframe.getCompressorDamage() < 0.35) && (m_elec.isDC()))
@@ -951,7 +977,11 @@ void FlightModel::calcZeroLift()
 
 		//----------Check if wing is stalled---------------------
 		//----abs (Betrag von) NEU (05Jun22) eingefügt, damit auch negativer AoA von mehr als m_setLiftZero zum Wingstalling führt
-		if ((abs(m_state.m_aoa) >= m_setLiftZero))
+		if ((abs(m_state.m_aoa) >= m_setLiftZero) && (m_airframe.getTiltEngineNozzlePosition() <= 0.4))
+		{
+			m_wingStalling = true;
+		}
+		else if ((m_state.m_aoa >= (1.35 * m_setLiftZero)) && (m_airframe.getTiltEngineNozzlePosition() > 0.4))
 		{
 			m_wingStalling = true;
 		}
@@ -1207,6 +1237,59 @@ void FlightModel::addedThrustCalc()
 	m_r_addThrust = m_addThrustR;
 }
 
+//-------------Thrust Tilt Function----------------------------------------------
+void FlightModel::thrustTiltFunction()
+{
+	if ((m_airframe.getTiltEngineNozzlePosition() >= 0.2) && (m_airframe.getTiltEngineNozzlePosition() < 0.4))
+	{
+		m_plusThrust = 0.275 * ((m_engine.updateThrust() + m_engine.updateThrust2()) * (m_airframe.getEngineDamageMult() + m_airframe.getEngineDamageMultR())); //0.376
+		m_minusThrust = 0.92;//-> 92% Schub vor
+	}
+	else if ((m_airframe.getTiltEngineNozzlePosition() >= 0.4) && (m_airframe.getTiltEngineNozzlePosition() < 0.6))
+	{
+		m_plusThrust = 0.83 * ((m_engine.updateThrust() + m_engine.updateThrust2()) * (m_airframe.getEngineDamageMult() + m_airframe.getEngineDamageMultR())); //0.888
+		m_minusThrust = 0.75;// -> 75% Schub vor
+	}
+	else if ((m_airframe.getTiltEngineNozzlePosition() >= 0.6) && (m_airframe.getTiltEngineNozzlePosition() < 0.8))
+	{
+		m_plusThrust = 0.885 * ((m_engine.updateThrust() + m_engine.updateThrust2()) * (m_airframe.getEngineDamageMult() + m_airframe.getEngineDamageMultR()));
+		m_minusThrust = 0.55;
+	}
+	else if ((m_airframe.getTiltEngineNozzlePosition() >= 0.8) && (m_airframe.getTiltEngineNozzlePosition() < 1.0))
+	{
+		m_plusThrust = 1.00 * ((m_engine.updateThrust() + m_engine.updateThrust2()) * (m_airframe.getEngineDamageMult() + m_airframe.getEngineDamageMultR()));// war 1.88
+		m_minusThrust = 0.05;//war 0.35
+	}
+	else if (m_airframe.getTiltEngineNozzlePosition() == 1.0)
+	{
+		m_plusThrust = 0.995 * ((m_engine.updateThrust() + m_engine.updateThrust2()) * (m_airframe.getEngineDamageMult() + m_airframe.getEngineDamageMultR()));// war 2.05
+		m_minusThrust = -0.05;// war 0.0
+	}
+	else
+	{
+		m_plusThrust = 0.0;
+		m_minusThrust = 1.0;
+	}
+
+}
+
+void FlightModel::hoverThrustFunction()
+{
+	if ((m_airframe.getTiltEngineNozzlePosition() >= 0.4) && (m_state.m_mach <= 0.40) && (m_engine.getRPMNorm() >= 0.70 && m_engine.getRPMNorm2() >= 0.70) && (m_airframe.getWeightOnWheels() == 0.0))
+	{
+		m_pitchHoverThrust = m_input.getPitch() * 25000.0;
+		m_rollHoverThrust = m_input.getRoll() * 15000.0;
+		m_yawHoverThrust = -m_input.getYaw() * 25000.0;
+	}
+	else
+	{
+		m_pitchHoverThrust = 0.0;
+		m_rollHoverThrust = 0.0;
+		m_yawHoverThrust = 0.0;
+	}
+
+}
+
 void FlightModel::flightControlSystem()
 {
 	//-------------AoA-Liniter Functions------------------------------------------------------------------------------
@@ -1218,7 +1301,7 @@ void FlightModel::flightControlSystem()
 
 	if ((m_airframe.getACpower() == 1.0) || (m_airframe.getDCpower() == 1.0) || (m_airframe.getBATpower() == 1.0))
 	{
-		if ((allowableAoAPercent >= 0.73) && (m_input.getPitch() > 0.0))
+		if ((allowableAoAPercent >= 0.73) && (m_airframe.getTiltEngineNozzlePosition() <= 0.4) && (m_input.getPitch() > 0.0))
 		{
 			m_pitchReduceAoA = FCSPitch(allowableAoAPercent);// Pitchmultiplier for actual allowable AoA
 		}
@@ -1339,12 +1422,12 @@ void FlightModel::update(double dt)
 	CDBrkCanard = CON_BrkCanardD * m_airframe.getSpeedCanardBrakePosition();
 	CDBrkCht = CON_ChtD * m_airframe.brkChutePosition();
 	//CLblc = m_airframe.BLCsystem() * CLFlaps;
-	if (m_spec == 0 && m_input.getSpecAb() == 1.0 && m_state.m_mach < 0.28 && m_airframe.getIntThrottlePosition()>0.95 && m_airframe.getIntThrottlePosition2() > 0.95 && m_engine.getRPMNorm() > 0.95 && m_engine.getRPMNorm2() > 0.95)
+	if (m_spec == 0 && m_input.getSpecAb() == 1.0 && m_state.m_mach < 0.28 && m_airframe.getTiltEngineNozzlePosition() == 0.0 && m_airframe.getIntThrottlePosition()>0.95 && m_airframe.getIntThrottlePosition2() > 0.95 && m_engine.getRPMNorm() > 0.95 && m_engine.getRPMNorm2() > 0.95)
 	{
 		m_spec = 1.0;
 		m_specTime = 3.0;
 	}
-	else if (m_specTime <= 0.0 || m_state.m_mach > 0.45 || m_airframe.getIntThrottlePosition() < 0.95 || m_airframe.getIntThrottlePosition2() < 0.95 || m_engine.getRPMNorm() < 0.95 || m_engine.getRPMNorm2() < 0.95)
+	else if (m_specTime <= 0.0 || m_state.m_mach > 0.45 || m_airframe.getTiltEngineNozzlePosition() > 0.0 || m_airframe.getIntThrottlePosition() < 0.95 || m_airframe.getIntThrottlePosition2() < 0.95 || m_engine.getRPMNorm() < 0.95 || m_engine.getRPMNorm2() < 0.95)
 	{
 		m_spec = 0.0;
 		m_specTime = 0.0;
@@ -1371,6 +1454,8 @@ void FlightModel::update(double dt)
 	brokenFlapDrag();
 	calcZeroLift();
 	addedThrustCalc();
+	thrustTiltFunction();
+	hoverThrustFunction();
 	flightControlSystem();
 	rollStabSystem();
 	yawStabSystem();
@@ -1604,6 +1689,7 @@ void FlightModel::update(double dt)
 			addForce(Vec3(m_r_thrustForce_x, m_r_thrustForce_y, m_r_thrustForce_z), Vec3(-8, m_state.m_com.y, 0.8));
 		}
 		//--------addForce addiert den Schub nach der Rotation des Drag zu der statischen Körper-X-Achse
+		addForce(Vec3(0.0, m_plusThrust, 0.0), m_state.m_com);
 	}
 	//printf("boddy_force_X %f \n", m_force_boddy.x);
 	//printf("BoddyForce Lift %f\n", m_force_boddy.y);

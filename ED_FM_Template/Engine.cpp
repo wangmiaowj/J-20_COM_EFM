@@ -422,6 +422,16 @@ double Engine::updateThrust() //Wenn Veränderungen dann hier verändern NICHT obe
 	//printf("Throttle %f \n", corrThrottle);
 
 	//printf("CurrentAirDensity %f \n", m_state.m_airDensity);
+	bool nozzleIsStraight = true;
+
+	if (m_input.getTiltEngineNozzle() >= 0.2)
+	{
+		nozzleIsStraight = false;
+	}
+	else
+	{
+		nozzleIsStraight = true;
+	}
 
 	//-----------Thrust-function---------------------------------------------------------------------------
 	//bei PMax den airdensity-correction-multiplyer eingefügt. Dieser bedarf einer Überarbeitung zusammen mit dem Drag und Thrust-profil...
@@ -431,7 +441,11 @@ double Engine::updateThrust() //Wenn Veränderungen dann hier verändern NICHT obe
 	{
 		m_thrust = (updateSpool() * PMax(m_state.m_mach)) * ((m_state.m_airDensity + (0.66 * m_corrAirDensity)) / CON_sDay_den);
 	}
-	else if ((updateSpool() > 0.85) && (m_ignitors1 == true) && (m_hasFuel == true) && (getRPMNorm() >= 0.70))
+	else if ((updateSpool() > 0.85) && (m_ignitors1 == true) && (m_hasFuel == true) && (getRPMNorm() >= 0.70) && (nozzleIsStraight == false))
+	{
+		m_thrust = (updateSpool() * PMax(m_state.m_mach)) * ((m_state.m_airDensity + (0.66 * m_corrAirDensity)) / CON_sDay_den);
+	}
+	else if ((updateSpool() > 0.85) && (m_ignitors1 == true) && (m_hasFuel == true) && (getRPMNorm() >= 0.70) && (nozzleIsStraight == true))
 	{
 		m_thrust = (updateSpool() * PFor(m_state.m_mach)) * ((m_state.m_airDensity + m_corrAirDensity) / CON_sDay_den);
 	}
@@ -460,6 +474,16 @@ double Engine::updateThrust2() //Wenn Veränderungen dann hier verändern NICHT ob
 	//printf("Throttle %f \n", corrThrottle);
 
 	//printf("CurrentAirDensity %f \n", m_state.m_airDensity);
+	bool nozzleIsStraight = true;
+
+	if (m_input.getTiltEngineNozzle() >= 0.2)
+	{
+		nozzleIsStraight = false;
+	}
+	else
+	{
+		nozzleIsStraight = true;
+	}
 
 	//-----------Thrust-function---------------------------------------------------------------------------
 	//bei PMax den airdensity-correction-multiplyer eingefügt. Dieser bedarf einer Überarbeitung zusammen mit dem Drag und Thrust-profil...
@@ -469,7 +493,11 @@ double Engine::updateThrust2() //Wenn Veränderungen dann hier verändern NICHT ob
 	{
 		m_thrust2 = (updateSpool2() * PMax(m_state.m_mach)) * ((m_state.m_airDensity + (0.66 * m_corrAirDensity)) / CON_sDay_den);
 	}
-	else if ((updateSpool2() > 0.85) && (m_ignitors2 == true) && (m_hasFuel == true) && (getRPMNorm2() >= 0.70))
+	else if ((updateSpool2() > 0.85) && (m_ignitors2 == true) && (m_hasFuel == true) && (getRPMNorm2() >= 0.70) && (nozzleIsStraight == false))
+	{
+		m_thrust2 = (updateSpool2() * PMax(m_state.m_mach)) * ((m_state.m_airDensity + (0.66 * m_corrAirDensity)) / CON_sDay_den);
+	}
+	else if ((updateSpool2() > 0.85) && (m_ignitors2 == true) && (m_hasFuel == true) && (getRPMNorm2() >= 0.70) && (nozzleIsStraight == true))
 	{
 		m_thrust2 = (updateSpool2() * PFor(m_state.m_mach)) * ((m_state.m_airDensity + m_corrAirDensity) / CON_sDay_den);
 	}
@@ -483,6 +511,17 @@ double Engine::updateThrust2() //Wenn Veränderungen dann hier verändern NICHT ob
 
 double Engine::FuelFlowUpdate()
 {
+	bool nozzleIsStraight = true;
+
+	if (m_input.getTiltEngineNozzle() >= 0.2)
+	{
+		nozzleIsStraight = false;
+	}
+	else
+	{
+		nozzleIsStraight = true;
+	}
+
 	double lowOmegaInertia = 1.0;
 
 	double spoolUpFactor = 0.0;
@@ -551,6 +590,16 @@ double Engine::FuelFlowUpdate()
 
 double Engine::FuelFlowUpdate2()
 {
+	bool nozzleIsStraight = true;
+
+	if (m_input.getTiltEngineNozzle() >= 0.2)
+	{
+		nozzleIsStraight = false;
+	}
+	else
+	{
+		nozzleIsStraight = true;
+	}
 
 	double lowOmegaInertia = 1.0;
 
@@ -780,6 +829,16 @@ double Engine::updateBurner()
 {
 	m_burner = 0.0;
 
+	bool nozzleIsStraight = true;
+
+	if (m_input.getTiltEngineNozzle() >= 0.2)
+	{
+		nozzleIsStraight = false;
+	}
+	else
+	{
+		nozzleIsStraight = true;
+	}
 	//------------------Alte Burner-Funktion die funktioniert----------------
 	/*double corrThrottle = 0.0;
 
@@ -792,7 +851,7 @@ double Engine::updateBurner()
 		corrThrottle = ((m_input.m_throttle + 1.0) / 2.0);
 	}*/
 
-	if ((updateSpool() >= 0.85) && (m_ignitors1 == true) && (m_hasFuel == true))
+	if ((updateSpool() >= 0.85) && (m_ignitors1 == true) && (m_hasFuel == true) && (nozzleIsStraight == true))
 	{
 		m_burner = 1.0;
 	}
@@ -806,6 +865,17 @@ double Engine::updateBurner()
 double Engine::updateBurner2()
 {
 	m_burner2 = 0.0;
+
+	bool nozzleIsStraight = true;
+
+	if (m_input.getTiltEngineNozzle() >= 0.2)
+	{
+		nozzleIsStraight = false;
+	}
+	else
+	{
+		nozzleIsStraight = true;
+	}
 	//------------------Alte Burner-Funktion die funktioniert----------------
 	/*double corrThrottle = 0.0;
 
@@ -818,7 +888,7 @@ double Engine::updateBurner2()
 		corrThrottle = ((m_input.m_throttle + 1.0) / 2.0);
 	}*/
 
-	if ((updateSpool2() >= 0.85) && (m_ignitors2 == true) && (m_hasFuel == true))
+	if ((updateSpool2() >= 0.85) && (m_ignitors2 == true) && (m_hasFuel == true) && (nozzleIsStraight == true))
 	{
 		m_burner2 = 1.0;
 	}
