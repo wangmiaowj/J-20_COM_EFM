@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Actuators.cpp" />
+    <ClCompile Include="Airframe.cpp" />
+    <ClCompile Include="APU.cpp" />
+    <ClCompile Include="AutoPilot.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="ED_FM_Template.cpp" />
+    <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="FlightModel.cpp" />
+    <ClCompile Include="Fuel_System.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="LuaVM.cpp" />
+    <ClCompile Include="PID.cpp" />
+    <ClCompile Include="State.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="Avionics\avUHF_ARC_164.cpp">
+      <Filter>Avionics</Filter>
+    </ClCompile>
+    <ClCompile Include="Avionics\avSimpleElectricSystem.cpp">
+      <Filter>Avionics</Filter>
+    </ClCompile>
+    <ClCompile Include="Avionics\avVHF_ARC_186.cpp">
+      <Filter>Avionics</Filter>
+    </ClCompile>
+    <ClCompile Include="Avionics\avILS.cpp">
+      <Filter>Avionics</Filter>
+    </ClCompile>
+    <ClCompile Include="devices\ufcp.cpp">
+      <Filter>devices</Filter>
+    </ClCompile>
+    <ClCompile Include="Avionics\avA11Clock.cpp">
+      <Filter>Avionics</Filter>
+    </ClCompile>
+    <ClCompile Include="devices\hmdDevice.cpp">
+      <Filter>devices</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Actuators.h" />
+    <ClInclude Include="AeroData_1.h" />
+    <ClInclude Include="Airframe.h" />
+    <ClInclude Include="APU.h" />
+    <ClInclude Include="AutoPilot.h" />
+    <ClInclude Include="BaseComponent.h" />
+    <ClInclude Include="ccParametersAPI.h" />
+    <ClInclude Include="CockpitAPI_Declare.h" />
+    <ClInclude Include="ED_FM_Template.h" />
+    <ClInclude Include="ED_FM_TemplateAPI.h" />
+    <ClInclude Include="ED_FM_Utility.h" />
+    <ClInclude Include="Engine.h" />
+    <ClInclude Include="FlightModel.h" />
+    <ClInclude Include="Fuel_System.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="LERX.h" />
+    <ClInclude Include="LuaVM.h" />
+    <ClInclude Include="Maths.h" />
+    <ClInclude Include="PID.h" />
+    <ClInclude Include="State.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Table.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="Units.h" />
+    <ClInclude Include="Vec3.h" />
+    <ClInclude Include="Avionics\avILS.h">
+      <Filter>Avionics</Filter>
+    </ClInclude>
+    <ClInclude Include="Avionics\avUHF_ARC_164.h">
+      <Filter>Avionics</Filter>
+    </ClInclude>
+    <ClInclude Include="Avionics\avSimpleElectricSystem.h">
+      <Filter>Avionics</Filter>
+    </ClInclude>
+    <ClInclude Include="Avionics\avA11Clock.h">
+      <Filter>Avionics</Filter>
+    </ClInclude>
+    <ClInclude Include="Avionics\avVHF_ARC_186.h">
+      <Filter>Avionics</Filter>
+    </ClInclude>
+    <ClInclude Include="MyException.h" />
+    <ClInclude Include="devices\ufcp.h">
+      <Filter>devices</Filter>
+    </ClInclude>
+    <ClInclude Include="ed_object_access.h" />
+    <ClInclude Include="ED\sound.h">
+      <Filter>ED</Filter>
+    </ClInclude>
+    <ClInclude Include="ED\ed_sounds_api.h">
+      <Filter>ED</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h" />
+    <ClInclude Include="devices\hmdDevice.h">
+      <Filter>devices</Filter>
+    </ClInclude>
+    <ClInclude Include="sounder.h">
+      <Filter>ED</Filter>
+    </ClInclude>
+    <ClInclude Include="ED\ccUnits.h">
+      <Filter>ED</Filter>
+    </ClInclude>
+    <ClInclude Include="ED\Actions.h">
+      <Filter>ED</Filter>
+    </ClInclude>
+    <ClInclude Include="ED\iCommand.h">
+      <Filter>ED</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Avionics">
+      <UniqueIdentifier>{2029cffd-a37d-4327-b3cc-1dffc92d4c50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="devices">
+      <UniqueIdentifier>{9a12a42c-a987-422a-a0b7-88a290a30bba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ED">
+      <UniqueIdentifier>{63a5d3ec-c80e-4dd9-83c8-76d142dffb65}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
