@@ -5,8 +5,6 @@
 #include "../BaseComponent.h"
 #include "../Input.h"
 #include "../Avionics/avSimpleElectricSystem.h"
-#include "../Avionics/avUHF_ARC_164.h"
-#include "../Avionics/avVHF_ARC_186.h"
 #include "../Avionics/avILS.h"
 #include "../Table.h"
 #include <map>
@@ -14,7 +12,7 @@
 #include <cstring>
 class UFCPDevice {
 public:
-	UFCPDevice(EDPARAM& edParam, avSimpleElectricSystem& p_elec, avUHF_ARC_164& p_uhf, avVHF_ARC_186& p_vhf, avILS& p_ils, Input& p_input);
+	UFCPDevice(EDPARAM& edParam, avSimpleElectricSystem& p_elec, avILS& p_ils, Input& p_input);
 	//Initialization
 	virtual void zeroInit();
 	virtual void coldInit();
@@ -74,6 +72,8 @@ private:
 		LASER_ERR_CODE,
 		LASER_TMP_CODE,
 
+		ATK_WPT,
+
 		AP_STATUS,
 		STABILITY,
 		AP_ALT,
@@ -132,38 +132,16 @@ private:
 	};
 	EDPARAM& cockpitApi;
 	avSimpleElectricSystem& elec;
-	avUHF_ARC_164& uhf;
-	avVHF_ARC_186& vhf;
 	avILS& ils;
 	Input& m_input;
 	void* ufcpPage;
 	void* navPage;
+	void* atkWptMax;
 	std::map<int, EdParam>params;
 	bool init = false;
-
-	int vhfAmMan = 0;
-	int vhfFmMan = 0;
-	int uhfMan = 0;
-	int freqSize = 0;
-
-	std::map<int, int>uhfPresets;
-	std::map<int, int>vhfAmPresets;
-	std::map<int, int>vhfFmPresets;
-	void initComm();
-	void updateFreq_comm();
 	int iptFreq(int freq, int num);
-	void inputFreq_comm(int num);
-	void checkInputFreq_comm();
-	void setCommand_comm(int command, float value);
-	void handleL1_comm();
-	void handleL2_comm();
-	void handleL3_comm();
-	void handleL4_comm();
-	void handleR1_comm();
-	void handleR2_comm();
-	void handleR3_comm();
-	void handleR4_comm();
-	void changeChannel_comm(int num);
+	int freqSize = 0;
+	void updateFreq();
 
 	void setCommand_ap(int command, float value);
 	void handleL1_ap();

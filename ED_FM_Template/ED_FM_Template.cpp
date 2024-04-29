@@ -118,16 +118,17 @@ void init(const char* config)
 	s_vhfArc186 = new avVHF_ARC_186(*s_edParam, *s_elec);
 	s_ils = new avILS(*s_edParam, *s_elec);
 	//s_tcn = new avTACAN(*s_edParam, *s_elec);
-	s_ufcp = new UFCPDevice(*s_edParam, *s_elec, *s_uhfArc164, *s_vhfArc186, *s_ils, *s_input);
+	s_ufcp = new UFCPDevice(*s_edParam, *s_elec, *s_ils, *s_input);
 	s_clock = new avA11Clock(*s_elec, *s_edParam);
 	CANARD_POS_h = s_edParam->getParamHandle("CANARD_POS");
 	G_h = s_edParam->getParamHandle("BASE_SENSOR_VERTICAL_ACCEL");
-	sounder = new Sounder(*s_snd, *s_engine, *s_state, *s_apu, *s_flightModel, *s_airframe, *s_autoPilot, *s_fuelsystem, *s_input, *s_clock);
+	sounder = new Sounder(*s_snd, *s_engine, *s_state, *s_apu, *s_flightModel, *s_airframe, *s_autoPilot, *s_fuelsystem, *s_input, *s_clock, *s_elec);
 }
 
 void cleanup()
 {
 	delete sounder;
+	delete s_snd;
 	delete s_input;
 	delete s_state;
 	delete s_engine;
@@ -146,9 +147,9 @@ void cleanup()
 	delete s_clock;
 	delete s_elec;
 	delete s_edParam;
-	delete s_snd;
 	delete s_luaVM;
 	sounder = nullptr;
+	s_snd = NULL;
 	//s_tcn = nullptr;
 	s_input = NULL;
 	s_state = NULL;
@@ -169,7 +170,6 @@ void cleanup()
 	s_ufcp = NULL;
 	s_elec = NULL;
 	s_edParam = NULL;
-	s_snd = NULL;
 	s_luaVM = NULL;
 }
 
@@ -223,6 +223,19 @@ void ed_fm_simulate(double dt)
 	//s_tcn->update(dt);
 	s_clock->update(dt);
 	s_ufcp->update(dt);
+	if (g > 12)
+	{
+		if (s_airframe->getIntegrityElement(Airframe::Damage::WING_L) == 1 && s_airframe->getIntegrityElement(Airframe::Damage::WING_R) == 1)
+		{
+			s_airframe->setDamageDelta(Airframe::Damage::WING_L, 1.0);
+			s_airframe->setDamageDelta(Airframe::Damage::WING_R, 1.0);
+		}
+		if (s_airframe->getIntegrityElement(Airframe::Damage::STABILIZATOR_L) == 1 && s_airframe->getIntegrityElement(Airframe::Damage::STABILIZATOR_R) == 1)
+		{
+			s_airframe->setDamageDelta(Airframe::Damage::STABILIZATOR_L, 1.0);
+			s_airframe->setDamageDelta(Airframe::Damage::STABILIZATOR_R, 1.0);
+		}
+	}
 }
 
 void ed_fm_set_atmosphere(double h,//altitude above sea level
@@ -327,10 +340,16 @@ void ed_fm_set_current_state_body_axis(
 		velocity - windVelocity,
 		Vec3(ax, ay, az)
 	);
+	if (toDegrees(omegay) > 400 && (s_airframe->getDamageElement(Airframe::Damage::RUDDER_L) == 1 || s_airframe->getDamageElement(Airframe::Damage::RUDDER_R) == 1))
+	{
+		s_airframe->setDamageDelta(Airframe::Damage::RUDDER_L, 1.0);
+		s_airframe->setDamageDelta(Airframe::Damage::RUDDER_R, 1.0);
+	}
 }
 
 void ed_fm_on_damage(int element, double element_integrity_factor)
 {
+	//受伤的时候调用
 	s_airframe->setIntegrityElement((Airframe::Damage)element, (float)element_integrity_factor);
 }
 
@@ -809,6 +828,12 @@ void ed_fm_set_command(int command,
 	case FCS_BIT:
 		s_input->setFcsBit(value);
 		break;
+	case LeftExtinguishing:
+		s_engine->useLeftExtinguishing();
+		break;
+	case RightExtinguishing:
+		s_engine->useRightExtinguishing();
+		break;
 	default:
 		break;
 		//printf("number %d: %f\n", command, value); //neu eingef黦t um "unbekannte" Kommandos zur Konsole auszugeben
@@ -1122,6 +1147,10 @@ double ed_fm_get_param(unsigned index)
 		return s_engine->updateThrust();
 
 	case ED_FM_ENGINE_1_COMBUSTION:
+		if (s_engine->isFire())
+		{
+			return 0.01;
+		}
 		return s_engine->FuelFlowUpdate();
 
 	case ED_FM_ENGINE_2_CORE_RPM: //RPM in Rad/s
@@ -1147,6 +1176,10 @@ double ed_fm_get_param(unsigned index)
 		return s_engine->updateThrust2();
 
 	case ED_FM_ENGINE_2_COMBUSTION:
+		if (s_engine->isFire2())
+		{
+			return 0.01;
+		}
 		return s_engine->FuelFlowUpdate2();
 	case ED_FM_FUEL_INTERNAL_FUEL:
 		return s_fuelsystem->getFuelQtyInternal();
@@ -1202,9 +1235,9 @@ double ed_fm_get_param(unsigned index)
 
 }
 
-
 bool ed_fm_pop_simulation_event(ed_fm_simulation_event& out)
 {
+	//这个函数每一帧都在调用，事件类型为0,需要自己处理事件类型
 	if (s_airframe->catapultState() == Airframe::ON_CAT_NOT_READY && !s_airframe->catapultStateSent())
 	{
 		out.event_type = ED_FM_EVENT_CARRIER_CATAPULT;
@@ -1229,10 +1262,49 @@ bool ed_fm_pop_simulation_event(ed_fm_simulation_event& out)
 
 		if (s_airframe->processDamageStack(damage, integrity))
 		{
+			s_airframe->toAircraftDamagePartHp((int)damage, integrity);
 			out.event_type = ED_FM_EVENT_STRUCTURE_DAMAGE;
 			out.event_params[0] = (float)damage;
 			out.event_params[1] = integrity;
-
+			printf("我向DCS推送结构损坏事件%.2f,%.2f\n", out.event_params[0], out.event_params[1]);
+			return true;
+		}
+		else if (s_engine->isFire() || s_engine->isFire2() || s_airframe->getEngineDamageMult() < 0.15 || s_airframe->getEngineDamageMultR() < 0.15)
+		{
+			if ((s_engine->isFire() || s_airframe->getEngineDamageMult() < 0.15) && !s_engine->getFire() && !s_engine->usedLeftExtinguishing())
+			{
+				//触发左发动机火灾
+				printf("左发火灾\n");
+				out.event_type = ED_FM_EVENT_FIRE;
+				s_airframe->leftEngineFire(out.event_params);
+				s_engine->setFire();
+			}
+			else if ((s_engine->isFire2() || s_airframe->getEngineDamageMultR() < 0.15) && !s_engine->getFire2() && !s_engine->usedRightExtinguishing())
+			{
+				//触发右发动机火灾
+				printf("右发火灾\n");
+				out.event_type = ED_FM_EVENT_FIRE;
+				s_airframe->rightEngineFire(out.event_params);
+				s_engine->setFire2();
+			}
+			else if ((s_engine->isFire() || s_airframe->getEngineDamageMult() < 0.15) && s_engine->getFire() && s_engine->usedLeftExtinguishing())
+			{
+				//使用了左发动机灭火器
+				printf("左发灭火\n");
+				out.event_type = ED_FM_EVENT_FIRE;
+				s_airframe->useLeftExtinguishing(out.event_params);
+			}
+			else if ((s_engine->isFire2() || s_airframe->getEngineDamageMultR() < 0.15) && s_engine->getFire2() && s_engine->usedRightExtinguishing())
+			{
+				//使用了右发动机灭火器
+				printf("右发灭火\n");
+				out.event_type = ED_FM_EVENT_FIRE;
+				s_airframe->useRightExtinguishing(out.event_params);
+			}
+			else
+			{
+				return false;
+			}
 			return true;
 		}
 		else
@@ -1244,14 +1316,70 @@ bool ed_fm_pop_simulation_event(ed_fm_simulation_event& out)
 
 bool ed_fm_push_simulation_event(const ed_fm_simulation_event& in)
 {
+	//DCS推送的事件
+	if (in.event_type != ED_FM_EVENT_INVALID)
+	{
+		printf("ed_fm_push_simulation_event\n");
+	}
+	switch (in.event_type)
+	{
+	case ED_FM_EVENT_FAILURE:
+		printf("失效事件\n");
+		break;
+	case ED_FM_EVENT_STRUCTURE_DAMAGE:
+		printf("结构损坏事件\n");
+		break;
+	case ED_FM_EVENT_FIRE:
+		printf("火灾事件\n");
+		break;
+	case ED_FM_EVENT_CARRIER_CATAPULT:
+		printf("航母弹射器事件\n");
+		break;
+	case ED_FM_EVENT_CARRIER_HOOKED:
+		printf("航母尾勾事件\n");
+		break;
+	case ED_FM_EVENT_EFFECT:
+		printf("效果事件\n");
+		break;
+	default:
+		break;
+	}
+	if (in.event_type != ED_FM_EVENT_INVALID)
+	{
+		printf("事件消息:\n");
+		for (int i = 0; i < 512; i++)
+		{
+			if ((int)in.event_message[i] == 0)
+			{
+				break;
+			}
+			printf("\\%d", (int)in.event_message[i]);
+		}
+		printf("\n");
+		printf("事件参数:{");
+		for (int i = 0; i < 16; i++)
+		{
+			if (i == 15)
+			{
+				printf("%.1f", in.event_params[i]);
+			}
+			else
+			{
+				printf("%.1f,", in.event_params[i]);
+			}
+		}
+		printf("}\n");
+	}
 	if (in.event_type == ED_FM_EVENT_CARRIER_CATAPULT)
 	{
 		if (in.event_params[0] == 1)
 		{
+			//弹射架挂上弹射器
 			s_airframe->catapultState() = Airframe::ON_CAT_NOT_READY;
 		}
 		else if (in.event_params[0] == 2)
 		{
+			//已弹射
 			s_airframe->catapultState() = Airframe::ON_CAT_LAUNCHING;
 		}
 		else if (in.event_params[0] == 3)
@@ -1339,6 +1467,7 @@ void ed_fm_repair()
 	s_airframe->resetOSdamage();
 	s_engine->repairHeatDamage();
 	s_engine->repairHeatDamage2();
+	s_engine->resetFire();
 }
 
 bool ed_fm_need_to_be_repaired()
@@ -1405,11 +1534,27 @@ bool ed_fm_LERX_vortex_update(unsigned idx, LERX_vortex& out)
 		{
 			//前缘缝翼
 			out.opacity = debugLERX > 0.0 ? 0.8 : clamp((g - 1.5) / 12.0 * s_state->m_mach * 1.5, 0.0, 0.8);
+			if (idx == 0)
+			{
+				out.opacity *= s_airframe->getDamageElement(Airframe::Damage::WING_L);
+			}
+			else
+			{
+				out.opacity *= s_airframe->getDamageElement(Airframe::Damage::WING_R);
+			}
 		}
 		else if (idx == 2 || idx == 5)
 		{
 			//鸭翼后面
 			out.opacity = debugLERX > 0.0 ? 0.8 : clamp((g - 3.0) / 12.0 * s_state->m_mach * 1.5, 0.0, 0.8);
+			if (idx == 2)
+			{
+				out.opacity *= s_airframe->getDamageElement(Airframe::Damage::STABILIZATOR_L);
+			}
+			else
+			{
+				out.opacity *= s_airframe->getDamageElement(Airframe::Damage::STABILIZATOR_R);
+			}
 		}
 		else if (idx == 1 || idx == 4)
 		{

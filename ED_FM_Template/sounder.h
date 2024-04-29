@@ -12,7 +12,7 @@
 
 class Sounder {
 public:
-	Sounder(Sound& p_sound, Engine& p_eng, State& p_state, APU& p_apu, FlightModel& p_model, Airframe& p_airframe, AutoPilot& p_ap, Fuelsystem& p_fuel, Input& p_input, avA11Clock& p_clock)
+	Sounder(Sound& p_sound, Engine& p_eng, State& p_state, APU& p_apu, FlightModel& p_model, Airframe& p_airframe, AutoPilot& p_ap, Fuelsystem& p_fuel, Input& p_input, avA11Clock& p_clock, avSimpleElectricSystem& p_elec)
 		:
 		snd(p_sound),
 		eng(p_eng),
@@ -24,7 +24,8 @@ public:
 		input(p_input),
 		apu(p_apu),
 		clock(p_clock),
-		quaternion()
+		quaternion(),
+		elec(p_elec)
 	{
 
 	}
@@ -41,6 +42,8 @@ public:
 		cptHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_End, 20.498);
 		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.Test, 90.666);
 		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.bitSucc, 1.550);
+		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.leftEngFire, 1.934);
+		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.rightEngFire, 1.867);
 		aircraftHost->getSource(protos.APU_Start).link(cptHost->getSource(protos.APU_Start));
 		aircraftHost->getSource(protos.APU_Running).link(cptHost->getSource(protos.APU_Running));
 		aircraftHost->getSource(protos.APU_End).link(cptHost->getSource(protos.APU_End));
@@ -80,10 +83,90 @@ public:
 			headPhonesHost->getSource(protos.bitSucc).playOnce();
 		}
 	}
+	void updateWarning(double dt)
+	{
+		if (eng.getFire() && elec.isDC() && warningPlayIdxMap.find(protos.leftEngFire) == warningPlayIdxMap.end())
+		{
+			warningPlayList.push_back(headPhonesHost->getSourceIndex(protos.leftEngFire));
+			warningPlayIdxMap[protos.leftEngFire] = warningPlayList.size() - 1;
+		}
+		else if (warningPlayIdxMap.find(protos.leftEngFire) != warningPlayIdxMap.end() && !eng.getFire())
+		{
+			warningPlayList.erase(warningPlayList.begin() + warningPlayIdxMap[protos.leftEngFire]);
+			for (auto it = warningPlayIdxMap.begin(); it != warningPlayIdxMap.end(); ++it)
+			{
+				if (it->second > warningPlayIdxMap[protos.leftEngFire])
+				{
+					it->second--;
+				}
+			}
+			warningPlayIdxMap.erase(protos.leftEngFire);
+		}
+		if (eng.getFire2() && elec.isDC() && warningPlayIdxMap.find(protos.rightEngFire) == warningPlayIdxMap.end())
+		{
+			warningPlayList.push_back(headPhonesHost->getSourceIndex(protos.rightEngFire));
+			warningPlayIdxMap[protos.rightEngFire] = warningPlayList.size() - 1;
+		}
+		else if (warningPlayIdxMap.find(protos.rightEngFire) != warningPlayIdxMap.end() && !eng.getFire2())
+		{
+			warningPlayList.erase(warningPlayList.begin() + warningPlayIdxMap[protos.rightEngFire]);
+			for (auto it = warningPlayIdxMap.begin(); it != warningPlayIdxMap.end(); ++it)
+			{
+				if (it->second > warningPlayIdxMap[protos.rightEngFire])
+				{
+					it->second--;
+				}
+			}
+			warningPlayIdxMap.erase(protos.rightEngFire);
+		}
+		if (warningPlayList.size() > 0)
+		{
+			if (playIdx == -1)
+			{
+				playIdx = 0;
+			}
+			if (playIdx >= warningPlayList.size() - 1)
+			{
+				playIdx = warningPlayList.size() - 1;
+			}
+			int lastIdx;
+			if (playIdx == 0)
+			{
+				lastIdx = warningPlayList.size() - 1;
+			}
+			else
+			{
+				lastIdx = playIdx - 1;
+			}
+			SoundSource& src = headPhonesHost->getSource(warningPlayList[lastIdx]);
+			if (!src.isPlaying())
+			{
+				//如果上一个音乐已播放完毕就播放本音乐然后索引+1
+				headPhonesHost->getSource(warningPlayList[playIdx]).playOnce();
+				playIdx++;
+				if (playIdx >= warningPlayList.size())
+				{
+					playIdx = 0;
+				}
+			}
+		}
+		else
+		{
+			playIdx = -1;
+		}
+	}
 	void update(double dt)
 	{
 		//updateApuSnd(dt);
 		updateBitSnd(dt);
+		try
+		{
+			updateWarning(dt);
+		}
+		catch (const std::exception& e)
+		{
+			printf("%s\n", e.what());
+		}
 		headPhonesHost->update(dt, state, clock.get_currtime(), quaternion);
 		aircraftHost->update(dt, state, clock.get_currtime(), quaternion);
 		cptHost->update(dt, state, clock.get_currtime(), quaternion);
@@ -99,6 +182,8 @@ private:
 		std::wstring APU_Running = L"Aircrafts/J-20A/APU_loop";
 		std::wstring APU_End = L"Aircrafts/FA-18/APU_End";
 		std::wstring bitSucc = L"Aircrafts/J-20A/Cockpit/bitComplate";
+		std::wstring leftEngFire = L"Aircrafts/J-20A/Cockpit/Warning/LeftEngineFire";
+		std::wstring rightEngFire = L"Aircrafts/J-20A/Cockpit/Warning/RightEngineFire";
 	};
 	Sound& snd;
 	Engine& eng;
@@ -110,9 +195,13 @@ private:
 	Fuelsystem& fuel;
 	Input& input;
 	avA11Clock& clock;
+	avSimpleElectricSystem& elec;
 	std::unique_ptr< SoundHost> aircraftHost;
 	std::unique_ptr< SoundHost> cptHost;
 	std::unique_ptr< SoundHost> headPhonesHost;
+	std::map<std::wstring, int>warningPlayIdxMap;
+	std::vector<int>warningPlayList;
+	int playIdx = -1;
 	Protos protos;
 	int apuSndPlayStep = 0;
 	Quaternion quaternion;

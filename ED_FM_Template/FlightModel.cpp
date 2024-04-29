@@ -1593,7 +1593,6 @@ void FlightModel::update(double dt)
 	{
 		if (m_input.getBackACar() == 1.0 && m_l_thrustForce_x < 2000.0 && m_r_thrustForce_x < 2000.0 && m_airframe.getWeightOnWheels()>0)
 		{
-			printf("倒车请注意\n");
 			double power = -13000 * (m_state.m_weight / 38000.0);
 			addForce(Vec3(power, 0.0, 0.0), Vec3(-8, m_state.m_com.y, -0.8));
 			addForce(Vec3(power, 0.0, 0.0), Vec3(-8, m_state.m_com.y, 0.8));
