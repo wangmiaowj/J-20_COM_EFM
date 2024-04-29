@@ -311,13 +311,13 @@ void Engine::update(double dt)
 			{
 				if (m_input.getEngineStart1() == 1)
 				{
-					printf("EngStop1=============================================================================");
+					printf("EngStop1=============================================================================\n");
 					m_input.engineStop1();
 					m_apu.unoccupy();
 				}
-				else if (!m_apu.isOccupy())
+				else if (!m_apu.isOccupy() && m_apu.isReady() && !m_extinguishing)
 				{
-					printf("EngStart1=============================================================================");
+					printf("EngStart1=============================================================================\n");
 					m_input.engineStart1();
 					m_apu.occupy(1);
 				}
@@ -326,20 +326,20 @@ void Engine::update(double dt)
 			{
 				if (m_input.getEngineStart2() == 1)
 				{
-					printf("EngStop2=============================================================================");
+					printf("EngStop2=============================================================================\n");
 					m_input.engineStop2();
 					m_apu.unoccupy();
 				}
-				else if (!m_apu.isOccupy())
+				else if (!m_apu.isOccupy() && m_apu.isReady() && !m_extinguishing2)
 				{
-					printf("EngStart2=============================================================================");
+					printf("EngStart2=============================================================================\n");
 					m_input.engineStart2();
 					m_apu.occupy(2);
 				}
 			}
 		}
 	}
-	else
+	else if (!m_elec.isDC() || !m_apu.isReady())
 	{
 		if (getRPMNorm() < 0.425)
 		{
@@ -363,7 +363,22 @@ void Engine::update(double dt)
 	{
 		m_input.engineStop2();
 	}
-
+	if ((m_rpmNormal < 0.2 || m_fire_temp>0) && m_input.getEngineStart1() > 0.99 && m_input.getLeftThrottleIdle() > 0.99 && m_apu.isRunning())
+	{
+		m_isFireIgnorEng = true;
+	}
+	else if (m_rpmNormal < 0.2 && m_input.getEngineStop1() < 0.99 && m_input.getLeftThrottleIdle() < 0.1 && m_tempInC < 100)
+	{
+		m_isFireIgnorEng = false;
+	}
+	if ((m_rpmNormal2 < 0.2 || m_fire_temp2>0) && m_input.getEngineStart2() > 0.99 && m_input.getRightThrottleIdle() > 0.99 && m_apu.isRunning())
+	{
+		m_isFireIgnorEng2 = true;
+	}
+	else if (m_rpmNormal2 < 0.2 && m_input.getEngineStop2() < 0.99 && m_input.getRightThrottleIdle() < 0.1 && m_tempInC2 < 100)
+	{
+		m_isFireIgnorEng2 = false;
+	}
 
 
 
@@ -403,6 +418,7 @@ void Engine::update(double dt)
 	overHeatInd();
 	overHeatInd2();
 	updateAnimation(dt);
+	updateEngineFireTemp();
 }
 
 double Engine::updateThrust() //Wenn Veränderungen dann hier verändern NICHT oben!!!!! //dt in die Klammer eingefügt//double zu void mit double dt verändert
@@ -736,7 +752,7 @@ double Engine::updateSpool2()
 double Engine::updateSpoolCold()
 {
 	double spoolColdEnd;
-	if (m_input.getLeftThrottleIdle() == 1)
+	if (m_input.getLeftThrottleIdle() == 1 && !m_isFireIgnorEng)
 	{
 		spoolColdEnd = 0.71;
 	}
@@ -762,7 +778,7 @@ double Engine::updateSpoolCold()
 double Engine::updateSpoolCold2()
 {
 	double spoolColdEnd;
-	if (m_input.getRightThrottleIdle() == 1)
+	if (m_input.getRightThrottleIdle() == 1 && !m_isFireIgnorEng2)
 	{
 		spoolColdEnd = 0.71;
 	}
@@ -796,7 +812,7 @@ double Engine::updateSpoolHot()
 	//m_spoolFactor = EngDel(m_deltaSpoolABS);//die alte Idee mit der Alten "Table"
 	int indexInArray = m_spoolHDeltaABS / 0.022; //hier wird der Index für den Array aus einer "double" in eine "int" umgemünzt, damit ganze Zahlen generiert werden// kein Factor, damit nicht außerhalb des Arrays verschoben wird
 	m_spoolHFactor = (DAT_HtoCspool[indexInArray]) / 120.0;//Variale indexInArray ergibt diejenige Zahl die dem Index in dem Array entspricht
-	m_spoolHSpoolStep = (m_spoolHDelta * m_spoolHFactor) - 0.00001;
+	m_spoolHSpoolStep = (m_spoolHDelta * m_spoolHFactor) - 0.000004;
 	m_spoolHNewSpool = m_spoolHOldSpool + m_spoolHSpoolStep;
 	m_spoolHOldSpool = m_spoolHNewSpool;
 	//printf("Throttle %f \n", corrThrottle);
@@ -814,7 +830,7 @@ double Engine::updateSpoolHot2()
 	//m_spoolFactor = EngDel(m_deltaSpoolABS);//die alte Idee mit der Alten "Table"
 	int indexInArray = m_spoolHDeltaABS2 / 0.022; //hier wird der Index für den Array aus einer "double" in eine "int" umgemünzt, damit ganze Zahlen generiert werden// kein Factor, damit nicht außerhalb des Arrays verschoben wird
 	m_spoolHFactor2 = (DAT_HtoCspool[indexInArray]) / 120.0;//Variale indexInArray ergibt diejenige Zahl die dem Index in dem Array entspricht
-	m_spoolHSpoolStep2 = (m_spoolHDelta2 * m_spoolHFactor2) - 0.00001;
+	m_spoolHSpoolStep2 = (m_spoolHDelta2 * m_spoolHFactor2) - 0.000004;
 	m_spoolHNewSpool2 = m_spoolHOldSpool2 + m_spoolHSpoolStep2;
 	m_spoolHOldSpool2 = m_spoolHNewSpool2;
 
@@ -911,7 +927,7 @@ double Engine::tempInC()
 	{
 		m_tempInC = 0.0;
 	}
-	if (m_spec_ab)
+	if (m_spec_ab && m_thrust > 0)
 	{
 		m_spec_tmp = clamp(m_spec_tmp + 0.05, 0, 9999);
 	}
@@ -919,7 +935,7 @@ double Engine::tempInC()
 	{
 		m_spec_tmp = clamp(m_spec_tmp - 0.02, 0, 9999);
 	}
-	return m_tempInC + m_spec_tmp;
+	return m_tempInC + m_spec_tmp + m_fire_temp;
 }
 
 double Engine::tempInC2()
@@ -934,8 +950,15 @@ double Engine::tempInC2()
 	{
 		m_tempInC2 = 0.0;
 	}
-
-	return m_tempInC + m_spec_tmp;
+	if (m_spec_ab && m_thrust2 > 0)
+	{
+		m_spec_tmp2 = clamp(m_spec_tmp2 + 0.05, 0, 9999);
+	}
+	else
+	{
+		m_spec_tmp2 = clamp(m_spec_tmp2 - 0.02, 0, 9999);
+	}
+	return m_tempInC2 + m_spec_tmp2 + m_fire_temp2;
 }
 
 double Engine::overHeatCount()

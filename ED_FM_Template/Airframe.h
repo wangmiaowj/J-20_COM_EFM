@@ -40,6 +40,7 @@ public:
 		ON_CAT_LAUNCHING,
 		OFF_CAT
 	};
+	float aircraftPartHP[137];//Scripts\Aircrafts\_Common\Damage.lua有137个损伤模块
 	//------------------------------------------
 
 	//------vorher kam nach "public:" gleich Airframe(State& state, Input& input, Engine& engine);
@@ -536,6 +537,95 @@ public:
 	{
 		return bitCount == 32;
 	}
+	inline void toAircraftDamagePartHp(int element, float& damage)
+	{
+		damage = (1 - damage) * aircraftPartHP[element];
+	}
+	inline void leftEngineFire(float event_params[])
+	{
+		event_params[0] = 0.0;
+		event_params[1] = -8.697;//火灾相对于本体的坐标x
+		event_params[2] = 0.017;//火灾相对于本体的坐标y
+		event_params[3] = -0.772;//火灾相对于本体的z
+		event_params[4] = 0;//火灾角度X
+		event_params[5] = toRad(180);//火灾角度Y
+		event_params[6] = 0;//火灾角度Z
+		event_params[7] = 10;//火焰粒子速度
+		event_params[8] = 100;//火焰规模
+		//setDamageDelta(Damage::ENGINE_L_IN, 1.0);
+	}
+	inline void rightEngineFire(float event_params[])
+	{
+		event_params[0] = 1.0;
+		event_params[1] = -8.697;//火灾相对于本体的坐标x
+		event_params[2] = 0.017;//火灾相对于本体的坐标y
+		event_params[3] = 0.772;//火灾相对于本体的z
+		event_params[4] = 0;//火灾角度X
+		event_params[5] = toRad(180);//火灾角度Y
+		event_params[6] = 0;//火灾角度Z
+		event_params[7] = 10;//火焰粒子速度
+		event_params[8] = 100;//火焰规模
+		//setDamageDelta(Damage::ENGINE_R_IN, 1.0);
+	}
+	inline void useLeftExtinguishing(float event_params[])
+	{
+		event_params[0] = (float)Damage::ENGINE_L_IN;
+		event_params[1] = -8.697;//火灾相对于本体的坐标x
+		event_params[2] = 0.017;//火灾相对于本体的坐标y
+		event_params[3] = 0.772;//火灾相对于本体的z
+		event_params[4] = 0;//火灾角度X
+		event_params[5] = toRad(180);//火灾角度Y
+		event_params[6] = 0;//火灾角度Z
+		event_params[7] = 0;//火焰粒子速度
+		event_params[8] = 0;//火焰规模
+		m_engine.setFire(false);
+	}
+	inline void useRightExtinguishing(float event_params[])
+	{
+		event_params[0] = (float)Damage::ENGINE_L_IN;
+		event_params[1] = -8.697;//火灾相对于本体的坐标x
+		event_params[2] = 0.017;//火灾相对于本体的坐标y
+		event_params[3] = -0.772;//火灾相对于本体的z
+		event_params[4] = 0;//火灾角度X
+		event_params[5] = toRad(180);//火灾角度Y
+		event_params[6] = 0;//火灾角度Z
+		event_params[7] = 0;//火焰粒子速度
+		event_params[8] = 0;//火焰规模
+		m_engine.setFire2(false);
+	}
+	inline void destroyByFire()
+	{
+		if ((m_engine.tempInC() > 1499 || m_engine.tempInC2() > 1499) && !destroyed)
+		{
+			setDamageDelta(Damage::NOSE_CENTER, 1.0);
+			setDamageDelta(Damage::NOSE_LEFT_SIDE, 1.0);
+			setDamageDelta(Damage::NOSE_RIGHT_SIDE, 1.0);
+			setDamageDelta(Damage::NOSE_BOTTOM, 1.0);
+			setDamageDelta(Damage::CABIN_LEFT_SIDE, 1.0);
+			setDamageDelta(Damage::CABIN_RIGHT_SIDE, 1.0);
+			setDamageDelta(Damage::CABIN_BOTTOM, 1.0);
+			setDamageDelta(Damage::FRONT_GEAR_BOX, 1.0);
+			setDamageDelta(Damage::FUSELAGE_LEFT_SIDE, 1.0);
+			setDamageDelta(Damage::FUSELAGE_RIGHT_SIDE, 1.0);
+			setDamageDelta(Damage::ENGINE_L, 1.0);
+			setDamageDelta(Damage::ENGINE_R, 1.0);
+			setDamageDelta(Damage::MTG_L_BOTTOM, 1.0);
+			setDamageDelta(Damage::MTG_R_BOTTOM, 1.0);
+			setDamageDelta(Damage::LEFT_GEAR_BOX, 1.0);
+			setDamageDelta(Damage::RIGHT_GEAR_BOX, 1.0);
+			setDamageDelta(Damage::ENGINE_L_OUT, 1.0);
+			setDamageDelta(Damage::ENGINE_R_OUT, 1.0);
+			setDamageDelta(Damage::AIR_BRAKE_L, 1.0);
+			setDamageDelta(Damage::AIR_BRAKE_R, 1.0);
+			setDamageDelta(Damage::WING_L_PART_OUT, 1.0);
+			setDamageDelta(Damage::WING_R_PART_OUT, 1.0);
+			setDamageDelta(Damage::WING_L_OUT, 1.0);
+			setDamageDelta(Damage::WING_R_OUT, 1.0);
+			setDamageDelta(Damage::AILERON_L, 1.0);
+			setDamageDelta(Damage::AILERON_R, 1.0);
+			destroyed = true;
+		}
+	}
 private:
 	enum paramName
 	{
@@ -805,7 +895,7 @@ private:
 	double bit_rudderL = 0.0;
 	double bit_rudderR = 0.0;
 	double bit_airBrake = 0.0;
-
+	bool destroyed = false;
 
 	void bitProgram(double dt);
 };
@@ -1567,5 +1657,3 @@ inline float Airframe::getFlapDamage() const
 {
 	return (DMG_ELEM(Damage::FLAP_L) + DMG_ELEM(Damage::FLAP_R)) / 2.0;
 }
-
-

@@ -190,7 +190,7 @@ inline cockpit_param_api  ed_get_cockpit_param_api()
 	ret.getRadioPowerFncPtr = (GET_RADIO_POWER_FUNC)GetProcAddress(cockpit_dll, "?ext_is_on@avBaseRadio@cockpit@@MEBA_NXZ");
 	ret.switchRadioPowerFncPtr = (GET_RADIO_POWER_FUNC)GetProcAddress(cockpit_dll, "?perform_init_state@avRadio_MAC@cockpit@@MEAAXXZ");
 	ret.pfn_ed_cockpit_set_action_digital = (PFN_ED_COCKPIT_SET_ACTION_DIGITAL)GetProcAddress(cockpit_dll, "ed_cockpit_set_action_digital");
-	ret.isOnIntercom = (PFN_IS_ON)GetProcAddress(cockpit_dll, "?isOn@avIntercom@cockpit@@UEBA_NXZ");
+	ret.isOnIntercom = (PFN_IS_ON)GetProcAddress(cockpit_dll, "?isOn@avIntercomV2@cockpit@@UEBA_NXZ");
 
 	ret.pfn_set_elec_power = (PFN_SET_ELEC_POWER)GetProcAddress(cockpit_dll, "?setElecPower@avBaseRadio@cockpit@@UEAAX_N@Z");
 	ret.pfn_get_communicator = (PFN_GET_COMMUNICATOR)GetProcAddress(cockpit_dll, "?getCommunicator@avBaseRadio@cockpit@@QEAAAEAVavCommunicator@2@XZ");
@@ -198,8 +198,8 @@ inline cockpit_param_api  ed_get_cockpit_param_api()
 	ret.device_array = (void**)GetProcAddress(cockpit_dll, "?contexts@ccCockpitContext@cockpit@@0PAV12@A");
 	ret.pfn_get_dc_wire = (PFN_GET_WIRE)GetProcAddress(cockpit_dll, "?getDCbus@avSimpleElectricSystem@cockpit@@QEAAAEAVWire@Elec@EagleFM@@H@Z");
 	ret.pfn_get_ac_wire = (PFN_GET_WIRE)GetProcAddress(cockpit_dll, "?getACbus@avSimpleElectricSystem@cockpit@@QEAAAEAVWire@Elec@EagleFM@@H@Z");
-	ret.pfn_push_to_talk = (PFN_PUSH_TO_TALK)GetProcAddress(cockpit_dll, "?pushToTalk@avIntercom@cockpit@@IEAAX_N@Z");
-	ret.pfn_try_set_communicator = (PFN_TRY_SET_COMMUNICATOR)GetProcAddress(cockpit_dll, "?makeSetupForCommunicator@avIntercom@cockpit@@MEAA_NI@Z");
+	ret.pfn_push_to_talk = (PFN_PUSH_TO_TALK)GetProcAddress(cockpit_dll, "?pushToTalk@avIntercomV2@cockpit@@IEAAX_N@Z");
+	ret.pfn_try_set_communicator = (PFN_TRY_SET_COMMUNICATOR)GetProcAddress(cockpit_dll, "?makeSetupForCommunicator@avIntercomV2@cockpit@@MEAA_NI@Z");
 	ret.pfn_is_communicator_on = (PFN_IS_ON)GetProcAddress(cockpit_dll, "?isOn@avCommunicator@cockpit@@QEBA_NXZ");
 	ret.pfn_is_receiver_on = (PFN_IS_ON)GetProcAddress(cockpit_dll, "?isReceiverOn@avCommunicator@cockpit@@QEBA_NXZ");
 	ret.pfn_is_transmitter_on = (PFN_IS_ON)GetProcAddress(cockpit_dll, "?isTransmitterOn@avCommunicator@cockpit@@QEBA_NXZ");
@@ -275,8 +275,6 @@ inline cockpit_param_api  ed_get_cockpit_param_api()
 	//ret.pfn_create_lua_vm = (PFN_CREATE_LUA_VM)GetProcAddress( cockpit_dll, "ed_cockpit_open_lua_state" );
 	//ret.pfn_destroy_lua_vm = (PFN_DESTROY_LUA_VM)GetProcAddress( cockpit_dll, "ed_cockpit_close_lua_state" );
 
-	//?makeSetupForCommunicator@avIntercom@cockpit@@MEAA_NI@Z
-	//?trySetCommunicator@avIntercom@cockpit@@MEAAXI@Z
 	//ret.getGunShells = (GET_SOMETHING_INT)GetProcAddress(cockpit_dll, "")
 	ret.pfn_TACAN_Constructor = (PFN_INITIALIZER)GetProcAddress(cockpit_dll, "??0avTACAN@cockpit@@QEAA@XZ");
 	ret.pfn_TACAN_connectElectric = (PFN_CONNECT_BOTH_ELECTRIC)GetProcAddress(cockpit_dll, "?connectElecPower@avTACAN@cockpit@@QEAAXAEAVItemBase@Elec@EagleFM@@0@Z");

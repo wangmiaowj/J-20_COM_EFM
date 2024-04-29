@@ -301,6 +301,8 @@ enum click_cmd {
 	LeftThrottorIdle,
 	RightThrottorIdle,
 	LaunchBarSw,
+	LeftExtinguishing,
+	RightExtinguishing,
 
 	EADI_AUTO,
 	EADI_SETUP,

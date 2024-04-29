@@ -55,6 +55,10 @@ public:
 	{
 		return m_apuRunning;
 	}
+	inline bool isReady()
+	{
+		return m_rpmNormal > 0.98;
+	}
 
 	//inline double getFuelFlow();//zum testen auskommentiert
 	inline void setHasFuel(bool hasFuel)

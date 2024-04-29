@@ -80,6 +80,56 @@ Airframe::Airframe
 	params[ENG_DIRECTION] = EdParam(m_cockpitAPI.getParamHandle("ENG_DIRECTION"), 0.0);
 	params[ENG_THRUST_SPORT] = EdParam(m_cockpitAPI.getParamHandle("ENG_THRUST_SPORT"), 0.0);
 	m_damageStack.reserve(10);
+	aircraftPartHP[0] = 3.0;
+	aircraftPartHP[1] = 8.0;
+	aircraftPartHP[2] = 8.0;
+	aircraftPartHP[3] = 2.0;
+	aircraftPartHP[4] = 8.0;
+	aircraftPartHP[5] = 8.0;
+	aircraftPartHP[6] = 8.0;
+	aircraftPartHP[7] = 1.0;
+	aircraftPartHP[8] = 10.0;
+	aircraftPartHP[9] = 10.0;
+	aircraftPartHP[10] = 10.0;
+	aircraftPartHP[11] = 20.0;
+	aircraftPartHP[12] = 20.0;
+	aircraftPartHP[15] = 8.0;
+	aircraftPartHP[16] = 8.0;
+	aircraftPartHP[17] = 5.0;
+	aircraftPartHP[18] = 5.0;
+	aircraftPartHP[21] = 3.0;
+	aircraftPartHP[22] = 3.0;
+	aircraftPartHP[23] = 3.0;
+	aircraftPartHP[24] = 3.0;
+	aircraftPartHP[25] = 5.0;
+	aircraftPartHP[26] = 5.0;
+	aircraftPartHP[27] = 6.0;
+	aircraftPartHP[28] = 6.0;
+	aircraftPartHP[35] = 10.0;
+	aircraftPartHP[36] = 10.0;
+	aircraftPartHP[37] = 5.0;
+	aircraftPartHP[38] = 5.0;
+	aircraftPartHP[43] = 4.0;
+	aircraftPartHP[47] = 5.0;
+	aircraftPartHP[48] = 5.0;
+	aircraftPartHP[53] = 5.0;
+	aircraftPartHP[54] = 5.0;
+	aircraftPartHP[55] = 20.0;
+	aircraftPartHP[56] = 10.0;
+	aircraftPartHP[57] = 10.0;
+	aircraftPartHP[58] = 10.0;
+	aircraftPartHP[60] = 3.0;
+	aircraftPartHP[61] = 4.0;
+	aircraftPartHP[62] = 10.0;
+	aircraftPartHP[82] = 4.0;
+	aircraftPartHP[83] = 2.0;
+	aircraftPartHP[84] = 2.0;
+	aircraftPartHP[85] = 2.0;
+	aircraftPartHP[86] = 3.0;
+	aircraftPartHP[87] = 3.0;
+	aircraftPartHP[88] = 3.0;
+	aircraftPartHP[89] = 3.0;
+	aircraftPartHP[100] = 5.0;
 }
 
 Airframe::~Airframe()
@@ -547,7 +597,7 @@ void Airframe::airframeUpdate(double dt)
 
 	electricSystem();
 	bitProgram(dt);
-
+	destroyByFire();
 
 
 	//printf("True_Mach %f \n", m_state.m_mach);
@@ -614,8 +664,8 @@ void Airframe::airframeUpdate(double dt)
 	}
 	params[HUD_GEAR].tgText = gear.c_str();
 	params[HUD_FLAP].tgText = flap.c_str();
-	params[leftThrottle].tg = getIntThrottlePosition();
-	params[rightThrottle].tg = getIntThrottlePosition2();
+	params[leftThrottle].tg = m_input.getLeftThrottleIdle() > 0.9 ? getIntThrottlePosition() : 0;
+	params[rightThrottle].tg = m_input.getRightThrottleIdle() > 0.9 ? getIntThrottlePosition2() : 0;
 	params[ENG_DIRECTION].tg = getTiltEngineNozzlePosition();
 	if (m_engine.getRPMNorm() < 0.675 && m_engine.getRPMNorm2() < 0.675)
 	{

@@ -101,10 +101,85 @@ public:
 
 	void updateAnimation(double dt);
 
+	inline bool getFire()
+	{
+		return m_isFire;
+	}
+	//是否满足发动机火灾的条件
+	inline bool isFire()
+	{
+		if (m_overHeat && m_fire_temp < 10)
+		{
+			m_fire_temp = m_spec_tmp;
+			m_spec_tmp = 0.0;
+		}
+		return (m_overHeat || (m_isFireIgnorEng && tempInC() > 900));
+	}
 
+	inline void setFire(bool fire = true)
+	{
+		m_isFire = fire;
+	}
+	inline bool getFire2()
+	{
+		return m_isFire2;
+	}
+	inline bool isFire2()
+	{
+		if (m_overHeat2 && m_fire_temp2 < 10)
+		{
+			m_fire_temp2 = m_spec_tmp2;
+			m_spec_tmp2 = 0.0;
+		}
+		return (m_overHeat2 || (m_isFireIgnorEng2 && tempInC2() > 900));
+	}
 
+	inline void setFire2(bool fire = true)
+	{
+		m_isFire2 = fire;
+	}
 	inline void setThrottle(double throttle); //Neu eingef黦t nach A4 engine2.h
-
+	inline bool usedLeftExtinguishing()
+	{
+		return m_extinguishing;
+	}
+	inline bool usedRightExtinguishing()
+	{
+		return m_extinguishing2;
+	}
+	inline void useLeftExtinguishing()
+	{
+		if (!m_extinguishing)
+		{
+			//m_fire_temp = 0;//灭火后火灾产生的温度应该降到0
+			m_extinguishing = true;
+			m_overHeat = true;
+			m_heatFailure = true;
+			//m_isFire = false;
+		}
+	}
+	inline void useRightExtinguishing()
+	{
+		if (!m_extinguishing2)
+		{
+			//m_fire_temp2 = 0;//灭火后火灾产生的温度应该降到0
+			m_extinguishing2 = true;
+			m_overHeat2 = 1.0;
+			m_heatFailure2 = true;
+			//m_isFire2 = false;
+		}
+	}
+	inline void resetFire()
+	{
+		m_extinguishing = false;
+		m_extinguishing2 = false;
+		m_fire_temp = 0;
+		m_fire_temp2 = 0;
+		m_isFire = false;
+		m_isFire2 = false;
+		m_isFireIgnorEng = false;
+		m_isFireIgnorEng2 = false;
+	}
 	float DAT_EngSpool[51]{ 0.00045016, 0.00042969, 0.00041015, 0.00039150, 0.00037369, 0.00035670, 0.00034047, 0.00032499, 0.00031021, 0.00029610, 0.00028264, 0.00026978, 0.00025751, 0.00024580, 0.00023462, 0.00022395, 0.00021377, 0.00020404, 0.00019477, 0.00018591, 0.00017745, 0.00016938, 0.00016168, 0.00015433, 0.00014731, 0.00014061, 0.00013421, 0.00012811, 0.00012228, 0.00011672, 0.00011141, 0.00010635, 0.00010151, 0.00009689, 0.00009249, 0.00008828, 0.00008427, 0.00008043, 0.00007678, 0.00007328, 0.00006995, 0.00006677, 0.00006373, 0.00006083, 0.00005807, 0.00005543, 0.00005291, 0.00005050, 0.00004820, 0.00004601, 0.00004392, };
 	float DAT_EngSpoolFuel[51]{ 0.00045016, 0.00042969, 0.00041015, 0.00039150, 0.00037369, 0.00035670, 0.00034047, 0.00032499, 0.00031021, 0.00029610, 0.00028264, 0.00026978, 0.00025751, 0.00024580, 0.00023462, 0.00022395, 0.00021377, 0.00020404, 0.00019477, 0.00018591, 0.00017745, 0.00016938, 0.00016168, 0.00015433, 0.00014731, 0.00014061, 0.00013421, 0.00012811, 0.00012228, 0.00011672, 0.00011141, 0.00010635, 0.00010151, 0.00009689, 0.00009249, 0.00008828, 0.00008427, 0.00008043, 0.00007678, 0.00007328, 0.00006995, 0.00006677, 0.00006373, 0.00006083, 0.00005807, 0.00005543, 0.00005291, 0.00005050, 0.00004820, 0.00004601, 0.00004392, };
 	float DAT_HtoCspool[51]{ 0.0000438, 0.0000467, 0.0000498, 0.0000531, 0.0000567, 0.0000605, 0.0000645, 0.0000688, 0.0000734, 0.0000783, 0.0000835, 0.0000891, 0.0000950, 0.0001014, 0.0001081, 0.0001153, 0.0001230, 0.0001312, 0.0001400, 0.0001493, 0.0001593, 0.0001699, 0.0001813, 0.0001934, 0.0002063, 0.0002200, 0.0002347, 0.0002504, 0.0002671, 0.0002849, 0.0003039, 0.0003242, 0.0003459, 0.0003689, 0.0003936, 0.0004198, 0.0004478, 0.0004777, 0.0005096, 0.0005436, 0.0005799, 0.0006186, 0.0006598, 0.0007039, 0.0007508, 0.0008009, 0.0008544, 0.0009114, 0.0009722, 0.0010371, 0.0011063, };
@@ -257,6 +332,17 @@ private:
 	double m_fan_r = 0.0;
 
 	double m_spec_tmp = 0.0;
+	double m_spec_tmp2 = 0.0;
+
+	bool m_isFire = false;
+	bool m_isFire2 = false;
+	bool m_isFireIgnorEng = false;//用来阻止左发动机启动，因为提前给油了
+	bool m_isFireIgnorEng2 = false;//用来阻止右发动机启动，因为提前给油了
+	bool m_extinguishing = false;//左灭火器是否已使用
+	bool m_extinguishing2 = false;//右灭火器是否已使用
+	double m_fire_temp = 0.0;//左发动机因火灾产生的温度
+	double m_fire_temp2 = 0.0;//右发动机因火灾产生的温度
+
 	//-------------Thrust Tables init------------------------
 	Table PMax;
 	Table PFor;
@@ -270,6 +356,33 @@ private:
 		double k = 1.0;
 		double rpm = k * sqrt(m_state.m_airDensity * airspeedMagnitude * airspeedMagnitude);
 		return rpm;
+	}
+	inline void updateEngineFireTemp()
+	{
+		if ((m_isFireIgnorEng && (m_input.getEngineStart1() > 0.9 || m_input.getLeftThrottleIdle() > 0.9)) || (m_isFire && !m_extinguishing))
+		{
+			m_fire_temp = clamp(m_fire_temp + 0.05, 0, 1500);
+		}
+		else if (m_isFireIgnorEng && m_input.getEngineStop1() > 0.9 && m_input.getLeftThrottleIdle() < 0.1 && !m_extinguishing)
+		{
+			m_fire_temp = clamp(m_fire_temp - 0.01, 0, 1500);
+		}
+		else if (m_extinguishing)
+		{
+			m_fire_temp = clamp(m_fire_temp - 1, 0, 1500);
+		}
+		if ((m_isFireIgnorEng2 && (m_input.getEngineStart2() > 0.9 || m_input.getRightThrottleIdle() > 0.9)) || (m_isFire2 && !m_extinguishing2))
+		{
+			m_fire_temp2 = clamp(m_fire_temp2 + 0.05, 0, 1500);
+		}
+		else if (m_isFireIgnorEng2 && m_input.getEngineStop2() > 0.9 && m_input.getRightThrottleIdle() < 0.1 && !m_extinguishing2)
+		{
+			m_fire_temp2 = clamp(m_fire_temp2 - 0.01, 0, 1500);
+		}
+		else if (m_extinguishing2)
+		{
+			m_fire_temp2 = clamp(m_fire_temp2 - 1, 0, 1500);
+		}
 	}
 };
 

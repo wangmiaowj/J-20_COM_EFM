@@ -296,6 +296,10 @@ public:
 	{
 		return *sndSources[wavMap[proto]];
 	}
+	int getSourceIndex(std::wstring proto)
+	{
+		return wavMap[proto];
+	}
 	SoundSource& getSource(int srcId)
 	{
 		return *sndSources[srcId];
