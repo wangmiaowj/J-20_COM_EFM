@@ -61,7 +61,8 @@ Airframe::Airframe
 	m_actuatorBayDoors(0.7),
 	m_wheelChockHandle(edParam.getParamHandle("WHEEL_CHOCK_STATUS")),
 
-	APascend(DAT_APascendAngle, CON_APascendAngle_min, CON_APascendAngle_max)
+	APascend(DAT_APascendAngle, CON_APascendAngle_min, CON_APascendAngle_max),
+	G_handle(m_cockpitAPI.getParamHandle("BASE_SENSOR_VERTICAL_ACCEL"))
 
 {
 	m_integrityElement = new float[(int)Damage::COUNT];
@@ -79,6 +80,7 @@ Airframe::Airframe
 	params[ROD_RB_POS] = EdParam(m_cockpitAPI.getParamHandle("ROD_RB_POS"), 0.0);
 	params[ENG_DIRECTION] = EdParam(m_cockpitAPI.getParamHandle("ENG_DIRECTION"), 0.0);
 	params[ENG_THRUST_SPORT] = EdParam(m_cockpitAPI.getParamHandle("ENG_THRUST_SPORT"), 0.0);
+	params[BROKEN_WING_WARNING] = EdParam(m_cockpitAPI.getParamHandle("BROKEN_WING_WARNING"), 0.0);
 	m_damageStack.reserve(10);
 	aircraftPartHP[0] = 3.0;
 	aircraftPartHP[1] = 8.0;
@@ -529,7 +531,7 @@ void Airframe::airframeUpdate(double dt)
 
 	m_bayDoorToggle = setBayDoorsPosition(dt);
 
-
+	updateOverGDamage(dt);
 
 
 	//printf("BayDoor Value %f\n", m_bayDoorToggle);
@@ -667,6 +669,7 @@ void Airframe::airframeUpdate(double dt)
 	params[leftThrottle].tg = m_input.getLeftThrottleIdle() > 0.9 ? getIntThrottlePosition() : 0;
 	params[rightThrottle].tg = m_input.getRightThrottleIdle() > 0.9 ? getIntThrottlePosition2() : 0;
 	params[ENG_DIRECTION].tg = getTiltEngineNozzlePosition();
+	params[BROKEN_WING_WARNING].tg = m_cdwn2BrokenWing / 3.0;
 	if (m_engine.getRPMNorm() < 0.675 && m_engine.getRPMNorm2() < 0.675)
 	{
 		params[ENG_THRUST_SPORT].tg = 0.0;
@@ -702,6 +705,7 @@ void Airframe::catapultCalculations(double dt)
 
 	if (m_catapultState == ON_CAT_NOT_READY && (m_engine.getRPMNorm() > 0.95 || m_engine.getRPMNorm2() > 0.95)) //von 0.9 auf 0.95 erhöht damit das CAT erst bei full-AB feuert
 	{
+		printf("µ¯ÉäÆ÷×´Ì¬:ON_CAT_NOT_READY->ON_CAT_READY\n");
 		m_catapultState = ON_CAT_READY;
 	}
 
@@ -2203,5 +2207,33 @@ void Airframe::bitProgram(double dt)
 		bitTime = 0;
 		bitCount = 0;
 		fcsBit = false;
+	}
+}
+void Airframe::updateOverGDamage(double dt)
+{
+	g = m_cockpitAPI.getParamNumber(G_handle);
+	if (g > 12)
+	{
+		m_brokenWingWarning = true;
+		m_cdwn2BrokenWing = clamp(m_cdwn2BrokenWing + dt * (g / 12.0), 0, 3);
+	}
+	else
+	{
+		m_brokenWingWarning = false;
+		m_cdwn2BrokenWing = clamp(m_cdwn2BrokenWing - dt * 0.3, 0, 3);
+	}
+	if (m_cdwn2BrokenWing >= 3)
+	{
+		if (getIntegrityElement(Airframe::Damage::WING_L) == 1 && getIntegrityElement(Airframe::Damage::WING_R) == 1)
+		{
+			setDamageDelta(Airframe::Damage::WING_L, 1.0);
+			setDamageDelta(Airframe::Damage::WING_R, 1.0);
+		}
+		if (getIntegrityElement(Airframe::Damage::STABILIZATOR_L) == 1 && getIntegrityElement(Airframe::Damage::STABILIZATOR_R) == 1)
+		{
+			setDamageDelta(Airframe::Damage::STABILIZATOR_L, 1.0);
+			setDamageDelta(Airframe::Damage::STABILIZATOR_R, 1.0);
+		}
+		m_cdwn2BrokenWing = 0;
 	}
 }

@@ -626,6 +626,14 @@ public:
 			destroyed = true;
 		}
 	}
+	inline double getG()
+	{
+		return g;
+	}
+	inline bool isBrokenWingWarning()
+	{
+		return m_brokenWingWarning;
+	}
 private:
 	enum paramName
 	{
@@ -641,7 +649,8 @@ private:
 		ROD_LB_POS,
 		ROD_RB_POS,
 		ENG_DIRECTION,
-		ENG_THRUST_SPORT
+		ENG_THRUST_SPORT,
+		BROKEN_WING_WARNING
 	};
 	Vec3 m_moment;
 	Vec3 m_force;
@@ -896,8 +905,13 @@ private:
 	double bit_rudderR = 0.0;
 	double bit_airBrake = 0.0;
 	bool destroyed = false;
+	void* G_handle;
+	double g = 1.0;
+	double m_cdwn2BrokenWing = 0.0;//折断机翼倒计时
+	bool m_brokenWingWarning = false;//是否正在折断机翼
 
 	void bitProgram(double dt);
+	void updateOverGDamage(double dt);
 };
 
 double Airframe::setAileron(double dt)
