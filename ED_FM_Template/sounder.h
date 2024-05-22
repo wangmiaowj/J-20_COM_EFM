@@ -44,6 +44,7 @@ public:
 		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.bitSucc, 1.550);
 		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.leftEngFire, 1.934);
 		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.rightEngFire, 1.867);
+		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.brokenWingWaring, 0.805);
 		aircraftHost->getSource(protos.APU_Start).link(cptHost->getSource(protos.APU_Start));
 		aircraftHost->getSource(protos.APU_Running).link(cptHost->getSource(protos.APU_Running));
 		aircraftHost->getSource(protos.APU_End).link(cptHost->getSource(protos.APU_End));
@@ -154,6 +155,13 @@ public:
 		{
 			playIdx = -1;
 		}
+		if (airframe.isBrokenWingWarning())
+		{
+			if (!headPhonesHost->getSource(protos.brokenWingWaring).isPlaying())
+			{
+				headPhonesHost->getSource(protos.brokenWingWaring).playOnce();
+			}
+		}
 	}
 	void update(double dt)
 	{
@@ -184,6 +192,7 @@ private:
 		std::wstring bitSucc = L"Aircrafts/J-20A/Cockpit/bitComplate";
 		std::wstring leftEngFire = L"Aircrafts/J-20A/Cockpit/Warning/LeftEngineFire";
 		std::wstring rightEngFire = L"Aircrafts/J-20A/Cockpit/Warning/RightEngineFire";
+		std::wstring brokenWingWaring = L"Aircrafts/F-15/Cockpit/OWS2";
 	};
 	Sound& snd;
 	Engine& eng;

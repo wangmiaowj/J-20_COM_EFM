@@ -70,11 +70,9 @@ static APU* s_apu = NULL;
 static avSimpleElectricSystem* s_elec = NULL;
 static EDPARAM* s_edParam = NULL;
 static void* CANARD_POS_h = NULL;
-static void* G_h = NULL;
 static LuaVM* s_luaVM = NULL;
 static std::vector<LERX> s_splines;
 static double debugLERX;
-static double g = 0.0;
 static HMDDevice* s_hmdDevice;
 static avUHF_ARC_164* s_uhfArc164;
 static avVHF_ARC_186* s_vhfArc186;
@@ -121,7 +119,6 @@ void init(const char* config)
 	s_ufcp = new UFCPDevice(*s_edParam, *s_elec, *s_ils, *s_input);
 	s_clock = new avA11Clock(*s_elec, *s_edParam);
 	CANARD_POS_h = s_edParam->getParamHandle("CANARD_POS");
-	G_h = s_edParam->getParamHandle("BASE_SENSOR_VERTICAL_ACCEL");
 	sounder = new Sounder(*s_snd, *s_engine, *s_state, *s_apu, *s_flightModel, *s_airframe, *s_autoPilot, *s_fuelsystem, *s_input, *s_clock, *s_elec);
 }
 
@@ -162,7 +159,6 @@ void cleanup()
 	s_apu = NULL;
 	s_hmdDevice = NULL;
 	CANARD_POS_h = NULL;
-	G_h = NULL;
 	s_uhfArc164 = NULL;
 	s_vhfArc186 = NULL;
 	s_ils = NULL;
@@ -215,7 +211,6 @@ void ed_fm_simulate(double dt)
 	s_apu->update(dt);
 	s_elec->update(dt);
 	s_edParam->setParamNumber(CANARD_POS_h, s_state->getAoaRate() * 30 + s_airframe->getSpeedCanardBrakePosition() * -90);
-	g = s_edParam->getParamNumber(G_h);
 	s_hmdDevice->update(dt);
 	s_uhfArc164->update(dt);
 	s_vhfArc186->update(dt);
@@ -223,19 +218,6 @@ void ed_fm_simulate(double dt)
 	//s_tcn->update(dt);
 	s_clock->update(dt);
 	s_ufcp->update(dt);
-	if (g > 12)
-	{
-		if (s_airframe->getIntegrityElement(Airframe::Damage::WING_L) == 1 && s_airframe->getIntegrityElement(Airframe::Damage::WING_R) == 1)
-		{
-			s_airframe->setDamageDelta(Airframe::Damage::WING_L, 1.0);
-			s_airframe->setDamageDelta(Airframe::Damage::WING_R, 1.0);
-		}
-		if (s_airframe->getIntegrityElement(Airframe::Damage::STABILIZATOR_L) == 1 && s_airframe->getIntegrityElement(Airframe::Damage::STABILIZATOR_R) == 1)
-		{
-			s_airframe->setDamageDelta(Airframe::Damage::STABILIZATOR_L, 1.0);
-			s_airframe->setDamageDelta(Airframe::Damage::STABILIZATOR_R, 1.0);
-		}
-	}
 }
 
 void ed_fm_set_atmosphere(double h,//altitude above sea level
@@ -1253,6 +1235,7 @@ bool ed_fm_pop_simulation_event(ed_fm_simulation_event& out)
 		out.event_params[2] = 90.0f + 20.0 * std::min(s_airframe->getMass() / c_maxTakeoffMass, 1.0);// original Funktion "60.0f + 20.0 * std::min(s_airframe->getMass() / c_maxTakeoffMass, 1.0);"
 		out.event_params[3] = s_engine->updateThrust() + s_engine->updateThrust2();
 		s_airframe->catapultState() = Airframe::ON_CAT_WAITING;
+		printf("µ¯ÉäÆ÷×´Ì¬:ON_CAT_READY->ON_CAT_WAITING/n");
 		return true;
 	}
 	else
@@ -1375,21 +1358,27 @@ bool ed_fm_push_simulation_event(const ed_fm_simulation_event& in)
 		if (in.event_params[0] == 1)
 		{
 			//µ¯Éä¼Ü¹ÒÉÏµ¯ÉäÆ÷
+			printf("µ¯ÉäÆ÷×´Ì¬:%d->ON_CAT_NOT_READY\n", s_airframe->catapultState());
 			s_airframe->catapultState() = Airframe::ON_CAT_NOT_READY;
 		}
 		else if (in.event_params[0] == 2)
 		{
 			//ÒÑµ¯Éä
+			printf("µ¯ÉäÆ÷×´Ì¬:%d->ON_CAT_LAUNCHING\n", s_airframe->catapultState());
 			s_airframe->catapultState() = Airframe::ON_CAT_LAUNCHING;
 		}
 		else if (in.event_params[0] == 3)
 		{
+			printf("µ¯ÉäÆ÷×´Ì¬:%d->OFF_CAT\n", s_airframe->catapultState());
 			if (s_airframe->catapultState() == Airframe::ON_CAT_LAUNCHING)
 			{
+				//Àë½¢
+				//ÕâÀïÐèÒª»ØÊÕµ¯Éä¼Ü
 				s_airframe->catapultState() = Airframe::OFF_CAT;
 			}
 			else
 			{
+				//ÖÕÖ¹Æð·É£¬µ¯Éä¼ÜÍÑ¹³CAT
 				s_airframe->catapultState() = Airframe::OFF_CAT;
 			}
 		}
@@ -1533,7 +1522,7 @@ bool ed_fm_LERX_vortex_update(unsigned idx, LERX_vortex& out)
 		if (idx == 0 || idx == 3)
 		{
 			//Ç°Ôµ·ìÒí
-			out.opacity = debugLERX > 0.0 ? 0.8 : clamp((g - 1.5) / 12.0 * s_state->m_mach * 1.5, 0.0, 0.8);
+			out.opacity = debugLERX > 0.0 ? 0.8 : clamp((s_airframe->getG() - 1.5) / 12.0 * s_state->m_mach * 1.5, 0.0, 0.8);
 			if (idx == 0)
 			{
 				out.opacity *= s_airframe->getDamageElement(Airframe::Damage::WING_L);
@@ -1546,7 +1535,7 @@ bool ed_fm_LERX_vortex_update(unsigned idx, LERX_vortex& out)
 		else if (idx == 2 || idx == 5)
 		{
 			//Ñ¼ÒíºóÃæ
-			out.opacity = debugLERX > 0.0 ? 0.8 : clamp((g - 3.0) / 12.0 * s_state->m_mach * 1.5, 0.0, 0.8);
+			out.opacity = debugLERX > 0.0 ? 0.8 : clamp((s_airframe->getG() - 3.0) / 12.0 * s_state->m_mach * 1.5, 0.0, 0.8);
 			if (idx == 2)
 			{
 				out.opacity *= s_airframe->getDamageElement(Airframe::Damage::STABILIZATOR_L);
@@ -1559,11 +1548,11 @@ bool ed_fm_LERX_vortex_update(unsigned idx, LERX_vortex& out)
 		else if (idx == 1 || idx == 4)
 		{
 			//Ñ¼ÒíÇ°Ãæ
-			out.opacity = debugLERX > 0.0 ? 0.8 : clamp((g - 6.0) / 12.0 * s_state->m_mach * 1.5, 0.0, 0.8);
+			out.opacity = debugLERX > 0.0 ? 0.8 : clamp((s_airframe->getG() - 6.0) / 12.0 * s_state->m_mach * 1.5, 0.0, 0.8);
 		}
 		else
 		{
-			out.opacity = debugLERX > 0.0 ? 0.8 : clamp((g - 1.0) / 12 * s_state->m_mach * 1.5, 0.0, 0.8);
+			out.opacity = debugLERX > 0.0 ? 0.8 : clamp((s_airframe->getG() - 1.0) / 12 * s_state->m_mach * 1.5, 0.0, 0.8);
 		}
 		s_splines[idx].setOpacity(out.opacity);
 		out.explosion_start = 10.0;
