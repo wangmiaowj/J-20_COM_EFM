@@ -110,19 +110,20 @@ private:
 	EDPARAM& m_cockpitAPI;
 
 	//11 Stations mit einer Nummerzuordnung zu den tatsächlichen Tanks
-	Tank m_stationToTank[11] =
+	Tank m_stationToTank[12] =
 	{
 		UNUSED,
-		LEFT_OUTSIDE,
-		LEFT_MID,
+		UNUSED,
+		UNUSED,
+		UNUSED,
+		UNUSED,
+		UNUSED,
+		UNUSED,
+		UNUSED,
 		LEFT_INSIDE,
-		UNUSED,
-		CENTER_LINE,
-		UNUSED,
 		RIGHT_INSIDE,
-		RIGHT_MID,
+		LEFT_OUTSIDE,
 		RIGHT_OUTSIDE,
-		UNUSED,
 	};
 
 	double m_fuel[NUMBER_OF_TANKS] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; //vorher waren es 5 jetzt nur 4 (3x external 1x intrenal)
@@ -134,7 +135,7 @@ private:
 	bool m_fuelSet[NUMBER_OF_TANKS] = { false, false, false, false, false, false, false, false }; //Check, if tank is empty or full
 
 	//										   INT      OUS_L  MID_L IN_L   CL    IN_R MID_R OUS_R
-	double m_fuelCapacity[NUMBER_OF_TANKS] = { 9500.0, 1949.0,  0.0, 0.0, 0.0, 0.0, 0.0, 1949.0 }; //values in kg WAS 2416.0, 4000.0, 1190.0, 1930.0, 1190.0
+	double m_fuelCapacity[NUMBER_OF_TANKS] = { 9500.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; //values in kg WAS 2416.0, 4000.0, 1190.0, 1930.0, 1190.0
 
 	//---------hier die Position der Tanks. Der CenterLine dürfte genau auf dem Schwerpunkt liegen. Die Tragflächen-Tanks werde ich noch raussuchen....
 	//---------CG sollte genau auf (+0.755, -0.25, 0.0) liegen. 

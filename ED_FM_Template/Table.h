@@ -209,6 +209,25 @@ public:
 private:
 
 };
-
+class Proto
+{
+public:
+	Proto(const std::wstring& _path, float _length, float _gain, float _radius, float _pitch, float _lowpass) :
+		path(_path), length(_length), gain(_gain), radius(_radius), pitch(_pitch), lowpass(_lowpass) {}
+	Proto(const std::wstring& _path, float _length, float _gain, float _radius, float _pitch) :
+		path(_path), length(_length), gain(_gain), radius(_radius), pitch(_pitch), lowpass(24000.0f) {}
+	Proto(const std::wstring& _path, float _length, float _gain, float _radius) :
+		path(_path), length(_length), gain(_gain), radius(_radius), pitch(1.0f), lowpass(24000.0f) {}
+	Proto(const std::wstring& _path, float _length, float _gain) :
+		path(_path), length(_length), gain(_gain), radius(1000.0f), pitch(1.0f), lowpass(24000.0f) {}
+	Proto(const std::wstring& _path, float _length) :
+		path(_path), length(_length), gain(1.0f), radius(1000.0f), pitch(1.0f), lowpass(24000.0f) {}
+	const std::wstring path;
+	const float gain;
+	const float pitch;
+	const float radius;
+	const float lowpass;
+	const float length;
+};
 
 #endif

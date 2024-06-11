@@ -634,6 +634,14 @@ public:
 	{
 		return m_brokenWingWarning;
 	}
+	inline bool flapsIsRun()
+	{
+		return m_actuatorFlap.IsRun();
+	}
+	inline bool airbrakeIsRun()
+	{
+		return m_actuatorAirbrk.IsRun();
+	}
 private:
 	enum paramName
 	{
@@ -917,7 +925,7 @@ private:
 double Airframe::setAileron(double dt)
 {
 	double input = m_input.getRoll() * m_ailDef; // +m_input.m_rollTrim(); // m_rollTrim kommt noch
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		input = 0;
 	}
@@ -928,7 +936,7 @@ double Airframe::setAileron(double dt)
 double Airframe::setStabilizer(double dt)
 {
 	double input = m_input.getPitch();//m_input.getPitch(); // +m_stabilizerZeroForceDeflection;
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		input = 0;
 	}
@@ -939,7 +947,7 @@ double Airframe::setStabilizer(double dt)
 double Airframe::setRudder(double dt)
 {
 	double input = m_input.getYaw() * m_rudDef; // +m_controls.yawTrim(); Yaw-Trim kommt noch
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		input = 0;
 	}
@@ -949,7 +957,7 @@ double Airframe::setRudder(double dt)
 double Airframe::setFlapsPosition(double dt)
 {
 	double input = m_input.getFlapsToggle();
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		input = 1.0;
 	}
@@ -959,7 +967,7 @@ double Airframe::setFlapsPosition(double dt)
 double Airframe::setLEFlapsPosition(double dt)
 {
 	double input = m_autoDriveLeFlaps;
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		input = 1.0;
 	}
@@ -975,7 +983,7 @@ double Airframe::setLEFlapsPosition(double dt)
 double Airframe::setGearLPosition(double dt)
 {
 	double input = m_input.getGearToggle();
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		if (input < 1)
 		{
@@ -989,7 +997,7 @@ double Airframe::setGearLPosition(double dt)
 double Airframe::setGearRPosition(double dt)
 {
 	double input = m_input.getGearToggle();
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		if (input < 1)
 		{
@@ -1005,7 +1013,7 @@ double Airframe::setGearNPosition(double dt)
 {
 
 	double input = m_input.getGearToggle();
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		if (input < 1)
 		{
@@ -1020,7 +1028,7 @@ double Airframe::setGearNPosition(double dt)
 double Airframe::setAirbrakePosition(double dt)
 {
 	double input = m_input.getAirbrake();
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		if (input > 0)
 		{
@@ -1035,7 +1043,7 @@ double Airframe::setCanardAirbrakePosition(double dt)
 	double input;
 	if ((getIntThrottlePosition() < 0.45 || getIntThrottlePosition2() < 0.45) && getWeightOnWheels() > 0)
 	{
-		if (m_elec.isAC())
+		if (m_elec.isAC() && !m_elec.isGndPwr())
 		{
 			input = clamp(getWeightOnWheels() + 0.2, 0, 1);
 		}
@@ -1054,7 +1062,7 @@ double Airframe::setCanardAirbrakePosition(double dt)
 double Airframe::setHookPosition(double dt)
 {
 	double input = m_input.getHookToggle();
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		if (input < 1)
 		{
@@ -1167,7 +1175,7 @@ double Airframe::getWeightOnWheels() const
 double Airframe::setRefuelingDoor(double dt)
 {
 	double input = m_input.getRefuelingDoorTgl();
-	if (!m_elec.isAC())
+	if (!m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		if (input > 0)
 		{

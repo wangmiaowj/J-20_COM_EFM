@@ -31,7 +31,9 @@ public:
 	void setActuatorSpeed(double factor);
 	void setOverSpeedMalFunction();
 	void revOverSpeedMalFunction();
-
+	inline bool IsRun() {
+		return m_actuatorTargetPos != m_actuatorPos && m_actuatorSpeed > 0;
+	}
 
 private: // = 0.0; bei allen actuators eingefügt, vorher fehlte das!!!
 	double m_actuatorFactor = 0.0;

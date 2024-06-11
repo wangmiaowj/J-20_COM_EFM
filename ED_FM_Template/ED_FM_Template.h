@@ -174,7 +174,7 @@ extern "C"
 	*/
 	ED_FM_TEMPLATE_API double ed_fm_get_external_fuel();
 	//ACHTUNG-ACHTUNG Änderungen für DCS V 2.7 siehe ed_fm_template.cpp
-	ED_FM_TEMPLATE_API void ed_fm_set_draw_args(EdDrawArgument* drawargs, size_t size);
+	ED_FM_TEMPLATE_API void ed_fm_set_draw_args_v2(float* data, size_t size);
 	ED_FM_TEMPLATE_API void ed_fm_set_fc3_cockpit_draw_args_v2(float* data, size_t size); //NEU eingefügt wegen Direktzugriff auf FC-3 Cockpit Anzeigen
 	ED_FM_TEMPLATE_API void ed_fm_configure(const char* cfg_path);
 	ED_FM_TEMPLATE_API void ed_fm_set_plugin_data_install_path(const char* path);

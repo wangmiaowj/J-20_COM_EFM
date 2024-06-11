@@ -71,31 +71,35 @@ public:
 	{
 		return snd_api.snd_src_unlink(src);
 	}
+	void snd_set_listener(SND_Context_id ctx, const struct SND_ListenerParams* params)
+	{
+		snd_api.snd_set_listener(ctx, params);
+	}
 
 private:
 	ed_snd_api snd_api;
 };
 class SoundSource {
 public:
-	SoundSource(Sound& p_snd, SND_Host_id hostId, SND_PlayMode playMode, const wchar_t* proto, double sndLength) :snd(p_snd), linkId(-1)
+	SoundSource(Sound& p_snd, SND_Host_id hostId, SND_PlayMode playMode, const Proto& proto)
+		:snd(p_snd), linkId(-1), soundLength(proto.length)
 	{
 		params = std::make_unique<SND_SourceParams>();
 		playParams = std::make_unique<SND_PlayParams>();
 		playParams->playmode = playMode;
 		params->fields = 6;
-		params->gain = 1.0;
-		params->lowpass = 24000.0;
+		params->gain = proto.gain;
+		params->lowpass = proto.lowpass;
+		params->pitch = proto.pitch;
+		params->radius = proto.radius;
 		params->orientation[0] = 0.0;
 		params->orientation[1] = 0.0;
 		params->orientation[2] = 0.0;
 		params->orientation[3] = 0.0;
-		params->pitch = 1.0;
 		params->position[0] = 0.0;
 		params->position[1] = 0.0;
 		params->position[2] = 0.0;
-		params->radius = 1000;
-		soundLength = sndLength;
-		id = snd.add_source(hostId, proto, params.get());
+		id = snd.add_source(hostId, proto.path.c_str(), params.get());
 	}
 	~SoundSource()
 	{
@@ -150,14 +154,19 @@ public:
 	}
 	void playOnce()
 	{
-		playParams->playmode = SND_PLAYMODE_ONCE;
-		playParams->timestamp = 0.0;
-		snd.snd_play(id, playParams.get(), params.get());
+		if (!isPlaying())
+		{
+			playParams->playmode = SND_PLAYMODE_ONCE;
+			snd.snd_play(id, playParams.get(), params.get());
+		}
 	}
 	void playLoop()
 	{
-		playParams->playmode = SND_PLAYMODE_LOOPED;
-		snd.snd_play(id, playParams.get(), params.get());
+		if (!isPlaying())
+		{
+			playParams->playmode = SND_PLAYMODE_LOOPED;
+			snd.snd_play(id, playParams.get(), params.get());
+		}
 	}
 	void link(SoundSource& linkSource)
 	{
@@ -180,23 +189,23 @@ public:
 	{
 		if (snd.snd_is_playing(id))
 		{
-			playParams->timestamp += (dt * params->pitch);
+			timestamp += (dt * params->pitch);
+			printf("timestamp====%.4f\n", timestamp);
+			printf("playParams->playmode====%d\n", playParams->playmode);
 			if (playParams->playmode == SND_PLAYMODE_ONCE)
 			{
-				if (playParams->timestamp > soundLength)
+				if (timestamp > soundLength)
 				{
-					snd.snd_stop(id);
-					playParams->timestamp = 0;
-				}
-			}
-			else
-			{
-				if (playParams->timestamp > soundLength)
-				{
-					playParams->timestamp = 0;
+					stop();
+					printf("stop()\n");
 				}
 			}
 		}
+		else
+		{
+			timestamp = 0;
+		}
+		//playParams->timestamp = timestamp;
 		params->position[0] = state.m_worldPosition.x;
 		params->position[1] = state.m_worldPosition.y;
 		params->position[2] = state.m_worldPosition.z;
@@ -212,7 +221,8 @@ private:
 	std::unique_ptr<SND_PlayParams> playParams;
 	Sound& snd;
 	SND_Source_id linkId = SND_SOURCE_ID_NONE;
-	double soundLength;
+	double soundLength = 0;
+	double timestamp = 0;
 };
 class SoundHost {
 public:
@@ -279,26 +289,26 @@ public:
 	{
 		snd.del_host(id);
 	}
-	int addSource(SND_PlayMode playMode, std::wstring proto, double sndLen)
+	int addSource(SND_PlayMode playMode, const Proto& proto)
 	{
-		std::unique_ptr<SoundSource> src = std::make_unique<SoundSource>(snd, id, playMode, proto.c_str(), sndLen);
+		std::unique_ptr<SoundSource> src = std::make_unique<SoundSource>(snd, id, playMode, proto);
 		SND_Source_id sourceId = src->getSrcId();
 		if (sourceId != SND_HOST_ID_NONE)
 		{
 			sndSources.push_back(std::move(src));
 			int srcId = sndSources.size() - 1;
-			wavMap[proto] = srcId;
+			wavMap[proto.path] = srcId;
 			return srcId;
 		}
 		return SND_HOST_ID_NONE;
 	}
-	SoundSource& getSource(std::wstring proto)
+	SoundSource& getSource(Proto proto)
 	{
-		return *sndSources[wavMap[proto]];
+		return *sndSources[wavMap[proto.path]];
 	}
-	int getSourceIndex(std::wstring proto)
+	int getSourceIndex(const Proto& proto)
 	{
-		return wavMap[proto];
+		return wavMap[proto.path];
 	}
 	SoundSource& getSource(int srcId)
 	{

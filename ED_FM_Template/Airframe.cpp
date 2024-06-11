@@ -860,60 +860,41 @@ double Airframe::updateBrakeRight()
 
 double Airframe::setNozzlePosition(double dt) //Nozzle-Position 0-10% Thrust open, 11-84% Thrust closed, 85-100% Thrust open
 {
-	double NozzlePos = 0.0;
-	double corrThrottle = 0.0;
-
-	if (m_input.getThrottle() >= 0.0)
-	{
-		corrThrottle = (1 - CON_ThrotIDL) * m_input.getThrottle() + CON_ThrotIDL;
-	}
-	else
-	{
-		corrThrottle = (m_input.getThrottle() + 1.0) / 2.0;
-	}
-
+	double NozzlePos = 1.0;
+	double corrThrottle = m_engine.getRPMNorm() > 0.685 ? m_engine.updateSpool() : 0.0;
 	if (corrThrottle <= 0.10)
 	{
-		NozzlePos = 0.4;
+		NozzlePos = 1.0;
 	}
-	else if (corrThrottle >= 0.85)
+	else if (corrThrottle >= 0.8)
 	{
-		NozzlePos = 0.80;
+		NozzlePos = (corrThrottle - 0.8) / 0.2;
 	}
 	else
 	{
-		NozzlePos = 0.2;
+		NozzlePos = 0;
 	}
-
+	
 	double input = NozzlePos;
 	return m_actuatorNozzle.inputUpdate(input, dt);
 }
 
 double Airframe::setNozzle2Position(double dt) //Nozzle-Position 0-10% Thrust open, 11-84% Thrust closed, 85-100% Thrust open
 {
-	double NozzlePos = 0.0;
-	double corrThrottle = 0.0;
-
-	if (m_input.getThrottle2() >= 0.0)
-	{
-		corrThrottle = (1 - CON_ThrotIDL) * m_input.getThrottle2() + CON_ThrotIDL;
-	}
-	else
-	{
-		corrThrottle = (m_input.getThrottle2() + 1.0) / 2.0;
-	}
+	double NozzlePos = 1.0;
+	double corrThrottle = m_engine.getRPMNorm2()>0.685? m_engine.updateSpool2():0.0;
 
 	if (corrThrottle <= 0.10)
 	{
-		NozzlePos = 0.4;
+		NozzlePos = 1.0;
 	}
-	else if (corrThrottle >= 0.85)
+	else if (corrThrottle >= 0.8)
 	{
-		NozzlePos = 0.80;
+		NozzlePos = (corrThrottle - 0.8) / 0.2;
 	}
 	else
 	{
-		NozzlePos = 0.2;
+		NozzlePos = 0.0;
 	}
 
 	double input = NozzlePos;
@@ -936,25 +917,9 @@ void Airframe::tiltNozzleFunction()
 		VTOLinAction = false;
 	}
 
-	if (m_input.getTiltEngineNozzle() == 0.2)
+	if (m_input.getTiltEngineNozzle() >= 0.2 && m_input.getTiltEngineNozzle()<=1.0)
 	{
-		NozzleFinalTilt = 0.2;
-	}
-	else if (m_input.getTiltEngineNozzle() == 0.3)
-	{
-		NozzleFinalTilt = 0.4;
-	}
-	else if (m_input.getTiltEngineNozzle() == 0.4)
-	{
-		NozzleFinalTilt = 0.6;
-	}
-	else if (m_input.getTiltEngineNozzle() == 0.5)
-	{
-		NozzleFinalTilt = 0.8;
-	}
-	else if (m_input.getTiltEngineNozzle() == 0.6)
-	{
-		NozzleFinalTilt = 1.0;
+		NozzleFinalTilt = (m_input.getTiltEngineNozzle() - 0.1)*2;
 	}
 	else
 	{

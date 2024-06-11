@@ -99,6 +99,9 @@ void avSimpleElectricSystem::setCommand(int command, float value)
 			e.printMsg();
 		}
 		break;
+	case iCommandGroundPowerAC:
+		s_gndPwr = 1 - s_gndPwr;
+		break;
 	default:
 		break;
 	}
@@ -261,5 +264,5 @@ const bool avSimpleElectricSystem::isAC()
 
 const bool avSimpleElectricSystem::isGndPwr()
 {
-	return false;
+	return m_gndPwr && s_gndPwr;
 }
