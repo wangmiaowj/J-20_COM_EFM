@@ -816,6 +816,9 @@ void ed_fm_set_command(int command,
 	case RightExtinguishing:
 		s_engine->useRightExtinguishing();
 		break;
+	case iCommandGroundPowerAC:
+		s_elec->setCommand(command, value);
+		break;
 	default:
 		break;
 		//printf("number %d: %f\n", command, value); //neu eingefügt um "unbekannte" Kommandos zur Konsole auszugeben
@@ -971,76 +974,76 @@ void ed_fm_set_fc3_cockpit_draw_args_v2(float* data, size_t size)
 */
 
 
-void ed_fm_set_draw_args(EdDrawArgument* drawargs, size_t size)
+void ed_fm_set_draw_args_v2(float* data, size_t size)
 {
-	//drawargs[28].f   = (float)throttle;
-	//drawargs[29].f   = (float)throttle;
+	//data[28]   = (float)throttle;
+	//data[29]   = (float)throttle;
 
 	if (size > 616)
 	{
-		drawargs[611].f = drawargs[0].f;
-		drawargs[614].f = drawargs[3].f;
-		drawargs[616].f = drawargs[5].f;
+		data[611] = data[0];
+		data[614] = data[3];
+		data[616] = data[5];
 	}
-	drawargs[0].f = s_airframe->getGearNPosition();//Nosewheel PositionÇ°ÆðÂä¼Ü
-	drawargs[2].f = s_airframe->getNoseWheelAngle();//Nosewheel Angle +/- 60? ±ÇÂÖ×ªÏò½Ç¶È
-	drawargs[3].f = s_airframe->getGearRPosition();//Right Gear Position ÓÒÆðÂä¼Ü
-	drawargs[5].f = s_airframe->getGearLPosition();//Left Gear Position ×óÆðÂä¼Ü
+	data[0] = s_airframe->getGearNPosition();//Nosewheel PositionÇ°ÆðÂä¼Ü
+	data[2] = s_airframe->getNoseWheelAngle();//Nosewheel Angle +/- 60? ±ÇÂÖ×ªÏò½Ç¶È
+	data[3] = s_airframe->getGearRPosition();//Right Gear Position ÓÒÆðÂä¼Ü
+	data[5] = s_airframe->getGearLPosition();//Left Gear Position ×óÆðÂä¼Ü
 	if (s_airframe->fcsIsBiting())
 	{
-		drawargs[9].f = s_airframe->getBit_flapR();//right flap Versuch ÓÒ½óÒí
-		drawargs[10].f = s_airframe->getBit_flapL();//left flap Versuch ×ó½óÒí
-		drawargs[11].f = s_airframe->getBit_aileronR();//right aileron ÓÒ¸±Òí
-		drawargs[12].f = -s_airframe->getBit_aileronL();//left Aileron ×ó¸±Òí
-		drawargs[13].f = s_airframe->getBit_leflapR();//ÓÒÇ°Ôµ½óÒí
-		drawargs[14].f = s_airframe->getBit_leflapL();//×óÇ°Ôµ½óÒí
-		drawargs[15].f = s_airframe->getBit_canardR(); //right elevator ist standard für ein Leitwerk ÓÒÑ¼Òí
-		drawargs[16].f = s_airframe->getBit_canardL();//left elevator ×óÑ¼Òí
-		drawargs[17].f = -s_airframe->getBit_rudderR(); //rudder ÓÒ´¹Î²
-		drawargs[18].f = -s_airframe->getBit_rudderL();//rudder nr. 2 ×ó´¹Î²
-		drawargs[21].f = s_airframe->getBit_airBrake(); //ÈÅÁ÷°å
-		drawargs[181].f = s_airframe->getBit_canardBrake();//Ñ¼ÒíÈÅÁ÷°å
+		data[9] = s_airframe->getBit_flapR();//right flap Versuch ÓÒ½óÒí
+		data[10] = s_airframe->getBit_flapL();//left flap Versuch ×ó½óÒí
+		data[11] = s_airframe->getBit_aileronR();//right aileron ÓÒ¸±Òí
+		data[12] = -s_airframe->getBit_aileronL();//left Aileron ×ó¸±Òí
+		data[13] = s_airframe->getBit_leflapR();//ÓÒÇ°Ôµ½óÒí
+		data[14] = s_airframe->getBit_leflapL();//×óÇ°Ôµ½óÒí
+		data[15] = s_airframe->getBit_canardR(); //right elevator ist standard für ein Leitwerk ÓÒÑ¼Òí
+		data[16] = s_airframe->getBit_canardL();//left elevator ×óÑ¼Òí
+		data[17] = -s_airframe->getBit_rudderR(); //rudder ÓÒ´¹Î²
+		data[18] = -s_airframe->getBit_rudderL();//rudder nr. 2 ×ó´¹Î²
+		data[21] = s_airframe->getBit_airBrake(); //ÈÅÁ÷°å
+		data[181] = s_airframe->getBit_canardBrake();//Ñ¼ÒíÈÅÁ÷°å
 	}
 	else
 	{
-		drawargs[9].f = s_airframe->getFlapsPosition();//right flap Versuch ÓÒ½óÒí
-		drawargs[10].f = s_airframe->getFlapsPosition();//left flap Versuch ×ó½óÒí
-		drawargs[11].f = s_airframe->getAileron();//right aileron ÓÒ¸±Òí
-		drawargs[12].f = -s_airframe->getAileron();//left Aileron ×ó¸±Òí
-		drawargs[13].f = s_airframe->getLEFlapPosition();//ÓÒÇ°Ôµ½óÒí
-		drawargs[14].f = s_airframe->getLEFlapPosition();//×óÇ°Ôµ½óÒí
-		drawargs[15].f = s_state->getAoaRate(); //right elevator ist standard für ein Leitwerk ÓÒÑ¼Òí
-		drawargs[16].f = s_state->getAoaRate();//left elevator ×óÑ¼Òí
-		drawargs[17].f = -s_airframe->getRudder(); //rudder ÓÒ´¹Î²
-		drawargs[18].f = -s_airframe->getRudder();//rudder nr. 2 ×ó´¹Î²
-		drawargs[21].f = s_airframe->getSpeedBrakePosition(); //ÈÅÁ÷°å
-		drawargs[181].f = s_airframe->getSpeedCanardBrakePosition();//Ñ¼ÒíÈÅÁ÷°å
+		data[9] = s_airframe->getFlapsPosition();//right flap Versuch ÓÒ½óÒí
+		data[10] = s_airframe->getFlapsPosition();//left flap Versuch ×ó½óÒí
+		data[11] = s_airframe->getAileron();//right aileron ÓÒ¸±Òí
+		data[12] = -s_airframe->getAileron();//left Aileron ×ó¸±Òí
+		data[13] = s_airframe->getLEFlapPosition();//ÓÒÇ°Ôµ½óÒí
+		data[14] = s_airframe->getLEFlapPosition();//×óÇ°Ôµ½óÒí
+		data[15] = s_state->getAoaRate(); //right elevator ist standard für ein Leitwerk ÓÒÑ¼Òí
+		data[16] = s_state->getAoaRate();//left elevator ×óÑ¼Òí
+		data[17] = -s_airframe->getRudder(); //rudder ÓÒ´¹Î²
+		data[18] = -s_airframe->getRudder();//rudder nr. 2 ×ó´¹Î²
+		data[21] = s_airframe->getSpeedBrakePosition(); //ÈÅÁ÷°å
+		data[181] = s_airframe->getSpeedCanardBrakePosition();//Ñ¼ÒíÈÅÁ÷°å
 	}
-	drawargs[22].f = s_airframe->getRefuelingDoor();// ¼ÓÓÍ¹Ü
-	drawargs[23].f = s_flightModel->getWheelChockStatus();
-	drawargs[26].f = s_airframe->getBayDoorsPosition();//BayDoorPosition 0.0 = zu 1.0 = auf AIµ¯²Ö
-	drawargs[28].f = s_engine->updateBurner2();//Burner Stage 1 and 0 for right engine ÓÒ·¢¶¯»úÈ¼ÉÕÊÒ¶¯»­
-	drawargs[29].f = s_engine->updateBurner();//Burner Stage 1 and 0 for right engine ×ó·¢¶¯»úÈ¼ÉÕÊÒ¶¯»­
-	drawargs[35].f = s_airframe->brkChutePosition();//¼õËÙÉ¡ÊÍ·Å
-	drawargs[36].f = s_airframe->getChutePositionY();//slew chute in Y-Axis (-1 to +1) ¼õËÙÉ¡YÖá°Ú¶¯
-	drawargs[37].f = s_airframe->getChutePositionZ();//slew chute in Z-Axis (-1 to +1) ¼õËÙÉ¡XÖá°Ú¶¯
-	drawargs[85].f = s_airframe->getLaunchBarPos();//aktuell noch ohne Anbindung an die Actuators, weil wir auch eh nix zum anziegne haben... µ¯Éä¸Ë
-	drawargs[89].f = s_airframe->getNozzlePosition();//Engine Nozzle Stage 1 - 0 - 1 ÓÒÅç¿Ú¶¯»­
-	drawargs[90].f = s_airframe->getNozzle2Position();//Engine2 Nozzle Position 1 - 0 - 1 ×óÅç¿Ú¶¯»­
-	//drawargs[182].f = s_airframe->getSpeedBrakePosition();//airbrake #1
-	//drawargs[184].f = s_airframe->getSpeedBrakePosition();//airbrake #2
-	drawargs[325].f = s_engine->getLeftFanAnimationValue();
-	drawargs[324].f = s_engine->getRightFanAnimationValue();
-	drawargs[515].f = s_flightModel->getVectorPitchR();
-	drawargs[516].f = s_flightModel->getVectorPitchL();
-	drawargs[517].f = s_flightModel->getVectorYaw();
-	drawargs[518].f = s_flightModel->getVectorYaw();
-	//drawargs[403].f = s_airframe->getRefuelingDoor();//Refueling-Door toggle Function
-	//drawargs[404].f = s_airframe->getTiltEngineNozzlePosition();// gibt die TiltNozzlePosition wieder mit 0.0 = gerade 1.0 = 90?runter
-	//drawargs[293].f = s_airframe->getTopRotorClap();// 293 ist die Rotor-TopKlappe
+	data[22] = s_airframe->getRefuelingDoor();// ¼ÓÓÍ¹Ü
+	data[23] = s_flightModel->getWheelChockStatus();
+	data[26] = s_airframe->getBayDoorsPosition();//BayDoorPosition 0.0 = zu 1.0 = auf AIµ¯²Ö
+	data[28] = s_engine->updateBurner2();//Burner Stage 1 and 0 for right engine ÓÒ·¢¶¯»úÈ¼ÉÕÊÒ¶¯»­
+	data[29] = s_engine->updateBurner();//Burner Stage 1 and 0 for right engine ×ó·¢¶¯»úÈ¼ÉÕÊÒ¶¯»­
+	data[35] = s_airframe->brkChutePosition();//¼õËÙÉ¡ÊÍ·Å
+	data[36] = s_airframe->getChutePositionY();//slew chute in Y-Axis (-1 to +1) ¼õËÙÉ¡YÖá°Ú¶¯
+	data[37] = s_airframe->getChutePositionZ();//slew chute in Z-Axis (-1 to +1) ¼õËÙÉ¡XÖá°Ú¶¯
+	data[85] = s_airframe->getLaunchBarPos();//aktuell noch ohne Anbindung an die Actuators, weil wir auch eh nix zum anziegne haben... µ¯Éä¸Ë
+	data[89] = s_airframe->getNozzlePosition();//Engine Nozzle Stage 1 - 0 - 1 ÓÒÅç¿Ú¶¯»­
+	data[90] = s_airframe->getNozzle2Position();//Engine2 Nozzle Position 1 - 0 - 1 ×óÅç¿Ú¶¯»­
+	//data[182] = s_airframe->getSpeedBrakePosition();//airbrake #1
+	//data[184] = s_airframe->getSpeedBrakePosition();//airbrake #2
+	data[325] = s_engine->getLeftFanAnimationValue();
+	data[324] = s_engine->getRightFanAnimationValue();
+	data[515] = s_flightModel->getVectorPitchR();
+	data[516] = s_flightModel->getVectorPitchL();
+	data[517] = s_flightModel->getVectorYaw();
+	data[518] = s_flightModel->getVectorYaw();
+	//data[403] = s_airframe->getRefuelingDoor();//Refueling-Door toggle Function
+	//data[404] = s_airframe->getTiltEngineNozzlePosition();// gibt die TiltNozzlePosition wieder mit 0.0 = gerade 1.0 = 90?runter
+	//data[293] = s_airframe->getTopRotorClap();// 293 ist die Rotor-TopKlappe
 
 	//--------this is Refueling-Probe argument---------
-	//drawargs[22].f = 1.0; //auskommentiert um zu testen ob FC3 das auch so macht...
+	//data[22] = 1.0; //auskommentiert um zu testen ob FC3 das auch so macht...
 }
 
 void ed_fm_set_fc3_cockpit_draw_args_v2(float* data, size_t size)

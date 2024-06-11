@@ -236,7 +236,19 @@ enum custom_cmd {
 	k_key_SP,
 	k_key_NEG,
 	k_back_a_car,
+	P2_to_flirPage,
+	STICK_SENSOR_CONTROL_FWD,
+	STICK_SENSOR_CONTROL_AFT,
+	STICK_SENSOR_CONTROL_LEFT,
+	STICK_SENSOR_CONTROL_RIGHT,
+	GunMode,
+	EmergJettion,
 };
+
+enum snd_cmd {
+	LaserFire = EmergJettion + 1
+};
+
 enum click_cmd {
 	WFOV = 3001,
 	NFOV,

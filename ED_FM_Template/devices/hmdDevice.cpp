@@ -35,7 +35,7 @@ void HMDDevice::airborneInit()
 void HMDDevice::update(double dt)
 {
 	dayNight = m_cockpit_api.getParamNumber(dayNight_h);
-	if (m_elec.isAC())
+	if (m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		params["HEAD_HDG"].tg = LoopPlayAnimal(m_cockpit_api.getParamNumber(hdg_h), -params["HEAD_AZ"].tg, 0, 360);
 		updateHMD_brt(dt);
@@ -47,7 +47,7 @@ void HMDDevice::update(double dt)
 }
 void HMDDevice::updateHMD_brt(double dt)
 {
-	if (m_elec.isAC())
+	if (m_elec.isAC() && !m_elec.isGndPwr())
 	{
 		if (abs(params["HEAD_AZ"].tg) < 7 && abs(params["HEAD_EL"].tg) < 7)
 		{

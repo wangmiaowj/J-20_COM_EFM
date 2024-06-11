@@ -34,21 +34,43 @@ public:
 		aircraftHost = std::make_unique< SoundHost>(snd.WORLD_CONTEXT, "J-20A_MAIN_HOST", snd);
 		cptHost = std::make_unique< SoundHost>(snd.COCKPIT_CONTEXT, "J-20A_MAIN_CPT_HOST", snd);
 		headPhonesHost = std::make_unique< SoundHost>(snd.HEADPHONES_CONTEXT, "J-20A_MAIN_HP_HOST", snd);
-		aircraftHost->addSource(SND_PLAYMODE_ONCE, protos.APU_Start, 24.628);
-		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_Running, 10.066);
-		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_End, 20.498);
-		cptHost->addSource(SND_PLAYMODE_ONCE, protos.APU_Start, 24.628);
-		cptHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_Running, 10.066);
-		cptHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_End, 20.498);
-		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.Test, 90.666);
-		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.bitSucc, 1.550);
-		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.leftEngFire, 1.934);
-		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.rightEngFire, 1.867);
-		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.brokenWingWaring, 0.805);
+		aircraftHost->addSource(SND_PLAYMODE_ONCE, protos.APU_Start);
+		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_Running);
+		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_End);
+		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.airbrakeRun);
+		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.airbrakeEnd);
+		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.flapRun);
+		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.flapEnd);
+		cptHost->addSource(SND_PLAYMODE_ONCE, protos.APU_Start);
+		cptHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_Running);
+		cptHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_End);
+		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.Test);
+		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.bitSucc);
+		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.leftEngFire);
+		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.rightEngFire);
+		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.brokenWingWaring);
 		aircraftHost->getSource(protos.APU_Start).link(cptHost->getSource(protos.APU_Start));
 		aircraftHost->getSource(protos.APU_Running).link(cptHost->getSource(protos.APU_Running));
 		aircraftHost->getSource(protos.APU_End).link(cptHost->getSource(protos.APU_End));
 		//headPhonesHost->getSource(protos.Test).playOnce();
+
+		world3DListenerParam = std::make_unique<SND_ListenerParams>();
+		world3DListenerParam.get()->fields = 5;
+		world3DListenerParam.get()->position[0] = 0.0;
+		world3DListenerParam.get()->position[1] = 0.0;
+		world3DListenerParam.get()->position[2] = 0.0;
+		world3DListenerParam.get()->velocity[0] = 0.0;
+		world3DListenerParam.get()->velocity[1] = 0.0;
+		world3DListenerParam.get()->velocity[2] = 0.0;
+		world3DListenerParam.get()->orientation[0] = 0.0;
+		world3DListenerParam.get()->orientation[1] = 0.0;
+		world3DListenerParam.get()->orientation[2] = 0.0;
+		world3DListenerParam.get()->orientation[3] = 0.0;
+		world3DListenerParam.get()->gain = 1.0;
+		world3DListenerParam.get()->pitch = 1.0;
+		world3DListenerParam.get()->lowpass = 24000.0;
+		world3DListenerParam.get()->timestamp = 0.0;
+		snd.snd_set_listener(snd.WORLD_CONTEXT, world3DListenerParam.get());
 		printf("sounder init\n");
 	}
 	void updateApuSnd(double dt)
@@ -77,6 +99,34 @@ public:
 			}
 		}
 	}
+	void updateAirBrakeSnd(double dt) {
+		SoundSource& airbrakeRunSrc = aircraftHost.get()->getSource(protos.airbrakeRun);
+		SoundSource& airbrakeEndSrc = aircraftHost.get()->getSource(protos.airbrakeEnd);
+		if (!airframe.airbrakeIsRun() && airbrakeRunSrc.isPlaying() && !airbrakeEndSrc.isPlaying())
+		{
+			airbrakeRunSrc.stop();
+			airbrakeEndSrc.playOnce();
+		}
+		else if (airframe.airbrakeIsRun() && !airbrakeRunSrc.isPlaying())
+		{
+			airbrakeEndSrc.stop();
+			airbrakeRunSrc.playLoop();
+		}
+	}
+	void updateFlapSnd(double dt) {
+		SoundSource& flapRunSrc = aircraftHost.get()->getSource(protos.flapRun);
+		SoundSource& flapEndSrc = aircraftHost.get()->getSource(protos.flapEnd);
+		if (!airframe.flapsIsRun() && flapRunSrc.isPlaying() && !flapEndSrc.isPlaying())
+		{
+			flapRunSrc.stop();
+			flapEndSrc.playOnce();
+		}
+		else if (airframe.flapsIsRun() && !flapRunSrc.isPlaying())
+		{
+			flapEndSrc.stop();
+			flapRunSrc.playLoop();
+		}
+	}
 	void updateBitSnd(double dt)
 	{
 		if (airframe.isBitSucc() && !headPhonesHost->getSource(protos.bitSucc).isPlaying())
@@ -86,39 +136,39 @@ public:
 	}
 	void updateWarning(double dt)
 	{
-		if (eng.getFire() && elec.isDC() && warningPlayIdxMap.find(protos.leftEngFire) == warningPlayIdxMap.end())
+		if (eng.getFire() && elec.isDC() && warningPlayIdxMap.find(protos.leftEngFire.path) == warningPlayIdxMap.end())
 		{
 			warningPlayList.push_back(headPhonesHost->getSourceIndex(protos.leftEngFire));
-			warningPlayIdxMap[protos.leftEngFire] = warningPlayList.size() - 1;
+			warningPlayIdxMap[protos.leftEngFire.path] = warningPlayList.size() - 1;
 		}
-		else if (warningPlayIdxMap.find(protos.leftEngFire) != warningPlayIdxMap.end() && !eng.getFire())
+		else if (warningPlayIdxMap.find(protos.leftEngFire.path) != warningPlayIdxMap.end() && !eng.getFire())
 		{
-			warningPlayList.erase(warningPlayList.begin() + warningPlayIdxMap[protos.leftEngFire]);
+			warningPlayList.erase(warningPlayList.begin() + warningPlayIdxMap[protos.leftEngFire.path]);
 			for (auto it = warningPlayIdxMap.begin(); it != warningPlayIdxMap.end(); ++it)
 			{
-				if (it->second > warningPlayIdxMap[protos.leftEngFire])
+				if (it->second > warningPlayIdxMap[protos.leftEngFire.path])
 				{
 					it->second--;
 				}
 			}
-			warningPlayIdxMap.erase(protos.leftEngFire);
+			warningPlayIdxMap.erase(protos.leftEngFire.path);
 		}
-		if (eng.getFire2() && elec.isDC() && warningPlayIdxMap.find(protos.rightEngFire) == warningPlayIdxMap.end())
+		if (eng.getFire2() && elec.isDC() && warningPlayIdxMap.find(protos.rightEngFire.path) == warningPlayIdxMap.end())
 		{
 			warningPlayList.push_back(headPhonesHost->getSourceIndex(protos.rightEngFire));
-			warningPlayIdxMap[protos.rightEngFire] = warningPlayList.size() - 1;
+			warningPlayIdxMap[protos.rightEngFire.path] = warningPlayList.size() - 1;
 		}
-		else if (warningPlayIdxMap.find(protos.rightEngFire) != warningPlayIdxMap.end() && !eng.getFire2())
+		else if (warningPlayIdxMap.find(protos.rightEngFire.path) != warningPlayIdxMap.end() && !eng.getFire2())
 		{
-			warningPlayList.erase(warningPlayList.begin() + warningPlayIdxMap[protos.rightEngFire]);
+			warningPlayList.erase(warningPlayList.begin() + warningPlayIdxMap[protos.rightEngFire.path]);
 			for (auto it = warningPlayIdxMap.begin(); it != warningPlayIdxMap.end(); ++it)
 			{
-				if (it->second > warningPlayIdxMap[protos.rightEngFire])
+				if (it->second > warningPlayIdxMap[protos.rightEngFire.path])
 				{
 					it->second--;
 				}
 			}
-			warningPlayIdxMap.erase(protos.rightEngFire);
+			warningPlayIdxMap.erase(protos.rightEngFire.path);
 		}
 		if (warningPlayList.size() > 0)
 		{
@@ -167,6 +217,8 @@ public:
 	{
 		//updateApuSnd(dt);
 		updateBitSnd(dt);
+		updateAirBrakeSnd(dt);
+		updateFlapSnd(dt);
 		try
 		{
 			updateWarning(dt);
@@ -178,6 +230,17 @@ public:
 		headPhonesHost->update(dt, state, clock.get_currtime(), quaternion);
 		aircraftHost->update(dt, state, clock.get_currtime(), quaternion);
 		cptHost->update(dt, state, clock.get_currtime(), quaternion);
+		world3DListenerParam.get()->position[0] = state.m_worldPosition.x;
+		world3DListenerParam.get()->position[1] = state.m_worldPosition.y;
+		world3DListenerParam.get()->position[2] = state.m_worldPosition.z;
+		world3DListenerParam.get()->velocity[0] = state.m_localSpeed.x;
+		world3DListenerParam.get()->velocity[1] = state.m_localSpeed.y;
+		world3DListenerParam.get()->velocity[2] = state.m_localSpeed.z;
+		world3DListenerParam.get()->orientation[0] = quaternion.x;
+		world3DListenerParam.get()->orientation[1] = quaternion.y;
+		world3DListenerParam.get()->orientation[2] = quaternion.z;
+		world3DListenerParam.get()->orientation[3] = quaternion.w;
+		world3DListenerParam.get()->timestamp = clock.get_currtime();
 	}
 	void setCurrentOrientation(const Quaternion& _quaternion)
 	{
@@ -185,14 +248,18 @@ public:
 	}
 private:
 	struct Protos {
-		std::wstring Test = L"Mp3Player/HOYO-MiX - 时暮的思眷 Le Souvenir avec le crepuscule";
-		std::wstring APU_Start = L"Aircrafts/J-20A/APU";
-		std::wstring APU_Running = L"Aircrafts/J-20A/APU_loop";
-		std::wstring APU_End = L"Aircrafts/FA-18/APU_End";
-		std::wstring bitSucc = L"Aircrafts/J-20A/Cockpit/bitComplate";
-		std::wstring leftEngFire = L"Aircrafts/J-20A/Cockpit/Warning/LeftEngineFire";
-		std::wstring rightEngFire = L"Aircrafts/J-20A/Cockpit/Warning/RightEngineFire";
-		std::wstring brokenWingWaring = L"Aircrafts/F-15/Cockpit/OWS2";
+		Proto Test = Proto(L"Mp3Player/HOYO-MiX - 时暮的思眷 Le Souvenir avec le crepuscule", 90.666f);
+		Proto APU_Start = Proto(L"Aircrafts/J-20A/APU", 24.628f);
+		Proto APU_Running = Proto(L"Aircrafts/J-20A/APU_loop", 10.066f);
+		Proto APU_End = Proto(L"Aircrafts/FA-18/APU_End", 20.498f);
+		Proto bitSucc = Proto(L"Aircrafts/J-20A/Cockpit/bitComplate", 1.550f);
+		Proto leftEngFire = Proto(L"Aircrafts/J-20A/Cockpit/Warning/LeftEngineFire", 1.934f);
+		Proto rightEngFire = Proto(L"Aircrafts/J-20A/Cockpit/Warning/RightEngineFire", 1.867f);
+		Proto brokenWingWaring = Proto(L"Aircrafts/F-15/Cockpit/OWS2", 0.805f);
+		Proto airbrakeRun = Proto(L"Aircrafts/AirBrake", 6.619f);
+		Proto airbrakeEnd = Proto(L"Aircrafts/AirBrakeEnd", 0.739f);
+		Proto flapRun = Proto(L"Aircrafts/FlapsElectric", 4.609f);
+		Proto flapEnd = Proto(L"Aircrafts/FlapsElectricEnd", 0.542f);
 	};
 	Sound& snd;
 	Engine& eng;
@@ -210,6 +277,7 @@ private:
 	std::unique_ptr< SoundHost> headPhonesHost;
 	std::map<std::wstring, int>warningPlayIdxMap;
 	std::vector<int>warningPlayList;
+	std::unique_ptr< SND_ListenerParams> world3DListenerParam;
 	int playIdx = -1;
 	Protos protos;
 	int apuSndPlayStep = 0;

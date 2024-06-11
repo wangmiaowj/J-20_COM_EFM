@@ -363,19 +363,19 @@ void Engine::update(double dt)
 	{
 		m_input.engineStop2();
 	}
-	if ((m_rpmNormal < 0.2 || m_fire_temp>0) && m_input.getEngineStart1() > 0.99 && m_input.getLeftThrottleIdle() > 0.99 && m_apu.isRunning())
+	if ((m_rpmNormal < 0.2 || m_fire_temp>0) && m_input.getEngineStart1() > 0.99 && m_input.getLeftThrottleIdle() > 0.99 && m_input.getThrottle() > -0.8 && m_apu.isRunning())
 	{
 		m_isFireIgnorEng = true;
 	}
-	else if (m_rpmNormal < 0.2 && m_input.getEngineStop1() < 0.99 && m_input.getLeftThrottleIdle() < 0.1 && m_tempInC < 100)
+	else if (m_rpmNormal < 0.2 && m_input.getEngineStop1() < 0.99 && m_input.getLeftThrottleIdle() < 0.1 && m_input.getThrottle() < -0.8 && m_tempInC < 100)
 	{
 		m_isFireIgnorEng = false;
 	}
-	if ((m_rpmNormal2 < 0.2 || m_fire_temp2>0) && m_input.getEngineStart2() > 0.99 && m_input.getRightThrottleIdle() > 0.99 && m_apu.isRunning())
+	if ((m_rpmNormal2 < 0.2 || m_fire_temp2>0) && m_input.getEngineStart2() > 0.99 && m_input.getRightThrottleIdle() > 0.99 && m_input.getThrottle2() > -0.8 && m_apu.isRunning())
 	{
 		m_isFireIgnorEng2 = true;
 	}
-	else if (m_rpmNormal2 < 0.2 && m_input.getEngineStop2() < 0.99 && m_input.getRightThrottleIdle() < 0.1 && m_tempInC2 < 100)
+	else if (m_rpmNormal2 < 0.2 && m_input.getEngineStop2() < 0.99 && m_input.getRightThrottleIdle() < 0.1 && m_input.getThrottle2() < -0.8 && m_tempInC2 < 100)
 	{
 		m_isFireIgnorEng2 = false;
 	}
@@ -443,11 +443,15 @@ double Engine::updateThrust() //Wenn Veränderungen dann hier verändern NICHT obe
 	//bei PMax den airdensity-correction-multiplyer eingefügt. Dieser bedarf einer Überarbeitung zusammen mit dem Drag und Thrust-profil...
 	//
 
-	if ((updateSpool() <= 0.85) && (m_ignitors1 == true) && (m_hasFuel == true) && (getRPMNorm() >= 0.70))
+	if ((updateSpool() <= 0.8) && (m_ignitors1 == true) && (m_hasFuel == true) && (getRPMNorm() >= 0.70))
 	{
 		m_thrust = (updateSpool() * PMax(m_state.m_mach)) * ((m_state.m_airDensity + (0.66 * m_corrAirDensity)) / CON_sDay_den);
 	}
-	else if ((updateSpool() > 0.85) && (m_ignitors1 == true) && (m_hasFuel == true) && (getRPMNorm() >= 0.70))
+	else if ((updateSpool() > 0.8) && (m_ignitors1 == true) && (m_hasFuel == true) && (getRPMNorm() >= 0.70))
+	{
+		m_thrust = (updateSpool() * PMax(m_state.m_mach)) * ((m_state.m_airDensity + (0.66 * m_corrAirDensity)) / CON_sDay_den);
+	}
+	else if ((updateSpool() > 0.8) && (m_ignitors1 == true) && (m_hasFuel == true) && (getRPMNorm() >= 0.70))
 	{
 		m_thrust = (updateSpool() * PFor(m_state.m_mach)) * ((m_state.m_airDensity + m_corrAirDensity) / CON_sDay_den);
 	}
@@ -481,11 +485,15 @@ double Engine::updateThrust2() //Wenn Veränderungen dann hier verändern NICHT ob
 	//bei PMax den airdensity-correction-multiplyer eingefügt. Dieser bedarf einer Überarbeitung zusammen mit dem Drag und Thrust-profil...
 	//
 
-	if ((updateSpool2() <= 0.85) && (m_ignitors2 == true) && (m_hasFuel == true) && (getRPMNorm2() >= 0.70))
+	if ((updateSpool2() <= 0.8) && (m_ignitors2 == true) && (m_hasFuel == true) && (getRPMNorm2() >= 0.70))
 	{
 		m_thrust2 = (updateSpool2() * PMax(m_state.m_mach)) * ((m_state.m_airDensity + (0.66 * m_corrAirDensity)) / CON_sDay_den);
 	}
-	else if ((updateSpool2() > 0.85) && (m_ignitors2 == true) && (m_hasFuel == true) && (getRPMNorm2() >= 0.70))
+	else if ((updateSpool2() > 0.8) && (m_ignitors2 == true) && (m_hasFuel == true) && (getRPMNorm2() >= 0.70))
+	{
+		m_thrust2 = (updateSpool2() * PMax(m_state.m_mach)) * ((m_state.m_airDensity + (0.66 * m_corrAirDensity)) / CON_sDay_den);
+	}
+	else if ((updateSpool2() > 0.8) && (m_ignitors2 == true) && (m_hasFuel == true) && (getRPMNorm2() >= 0.70))
 	{
 		m_thrust2 = (updateSpool2() * PFor(m_state.m_mach)) * ((m_state.m_airDensity + m_corrAirDensity) / CON_sDay_den);
 	}
@@ -647,7 +655,10 @@ double Engine::updateSpool()
 	{
 		corrThrottle = (m_input.getThrottle() + 1.0) / 2.0;
 	}
-
+	if (m_input.getBackACar() > 0.9)
+	{
+		corrThrottle = 0.0;
+	}
 
 
 	m_deltaSpool = corrThrottle - m_oldThrottle;
@@ -680,7 +691,10 @@ double Engine::updateSpool2()
 	{
 		corrThrottle = (m_input.getThrottle2() + 1.0) / 2.0;
 	}
-
+	if (m_input.getBackACar() > 0.9)
+	{
+		corrThrottle = 0.0;
+	}
 
 
 	m_deltaSpool2 = corrThrottle - m_oldThrottle2;
@@ -808,14 +822,15 @@ double Engine::updateBurner()
 		corrThrottle = ((m_input.m_throttle + 1.0) / 2.0);
 	}*/
 
-	if ((updateSpool() >= 0.85) && (m_ignitors1 == true) && (m_hasFuel == true))
+	/*if ((updateSpool() >= 0.85) && (m_ignitors1 == true) && (m_hasFuel == true))
 	{
 		m_burner = 1.0;
 	}
 	else
 	{
 		m_burner = 0.0;
-	}
+	}*/
+	m_burner = getRPMNorm() > 0.685 && m_hasFuel && m_ignitors1 ? ((updateSpool() - 0.8) / 0.2) : 0;
 	return m_burner;
 }
 
@@ -834,14 +849,15 @@ double Engine::updateBurner2()
 		corrThrottle = ((m_input.m_throttle + 1.0) / 2.0);
 	}*/
 
-	if ((updateSpool2() >= 0.85) && (m_ignitors2 == true) && (m_hasFuel == true))
+	/*if ((updateSpool2() >= 0.85) && (m_ignitors2 == true) && (m_hasFuel == true))
 	{
 		m_burner2 = 1.0;
 	}
 	else
 	{
 		m_burner2 = 0.0;
-	}
+	}*/
+	m_burner2 = getRPMNorm2() && m_hasFuel && m_ignitors2 > 0.685 ? ((updateSpool2() - 0.8) / 0.2):0;
 	return m_burner2;
 }
 

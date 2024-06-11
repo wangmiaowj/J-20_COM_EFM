@@ -843,29 +843,19 @@ double Airframe::updateBrakeRight()
 
 double Airframe::setNozzlePosition(double dt) //Nozzle-Position 0-10% Thrust open, 11-84% Thrust closed, 85-100% Thrust open
 {
-	double NozzlePos = 0.0;
-	double corrThrottle = 0.0;
-
-	if (m_input.getThrottle() >= 0.0)
-	{
-		corrThrottle = (1 - CON_ThrotIDL) * m_input.getThrottle() + CON_ThrotIDL;
-	}
-	else
-	{
-		corrThrottle = (m_input.getThrottle() + 1.0) / 2.0;
-	}
-
+	double NozzlePos = 1.0;
+	double corrThrottle = m_engine.getRPMNorm() > 0.685 ? m_engine.updateSpool() : 0.0;
 	if (corrThrottle <= 0.10)
 	{
-		NozzlePos = 0.4;
+		NozzlePos = 1.0;
 	}
-	else if (corrThrottle >= 0.85)
+	else if (corrThrottle >= 0.8)
 	{
-		NozzlePos = 0.80;
+		NozzlePos = (corrThrottle - 0.8) / 0.2;
 	}
 	else
 	{
-		NozzlePos = 0.2;
+		NozzlePos = 0;
 	}
 
 	double input = NozzlePos;
@@ -874,29 +864,20 @@ double Airframe::setNozzlePosition(double dt) //Nozzle-Position 0-10% Thrust ope
 
 double Airframe::setNozzle2Position(double dt) //Nozzle-Position 0-10% Thrust open, 11-84% Thrust closed, 85-100% Thrust open
 {
-	double NozzlePos = 0.0;
-	double corrThrottle = 0.0;
-
-	if (m_input.getThrottle2() >= 0.0)
-	{
-		corrThrottle = (1 - CON_ThrotIDL) * m_input.getThrottle2() + CON_ThrotIDL;
-	}
-	else
-	{
-		corrThrottle = (m_input.getThrottle2() + 1.0) / 2.0;
-	}
+	double NozzlePos = 1.0;
+	double corrThrottle = m_engine.getRPMNorm2()>0.685? m_engine.updateSpool2():0.0;
 
 	if (corrThrottle <= 0.10)
 	{
-		NozzlePos = 0.4;
+		NozzlePos = 1.0;
 	}
-	else if (corrThrottle >= 0.85)
+	else if (corrThrottle >= 0.8)
 	{
-		NozzlePos = 0.80;
+		NozzlePos = (corrThrottle - 0.8) / 0.2;
 	}
 	else
 	{
-		NozzlePos = 0.2;
+		NozzlePos = 0.0;
 	}
 
 	double input = NozzlePos;

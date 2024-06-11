@@ -25,7 +25,7 @@ public:
 		}
 		printf("Device Table: %p\n", deviceTable);
 		devicesClass[ELECTRIC_SYSTEM] = nullptr;
-		devicesClass[WEAPON_SYSTEM] = nullptr;
+		//devicesClass[WEAPON_SYSTEM] = nullptr;
 		devicesClass[ILS] = nullptr;
 		devicesClass[RADAR_RAW] = nullptr;
 		devicesClass[UHF_RADIO] = nullptr;
@@ -96,10 +96,10 @@ public:
 		{
 			devicesClass[ELECTRIC_SYSTEM] = initDevice(deviceTable, devices::ELECTRIC_SYSTEM, "elecDevice");
 		}
-		if (devicesClass[WEAPON_SYSTEM] == nullptr)
+		/*if (devicesClass[WEAPON_SYSTEM] == nullptr)
 		{
 			devicesClass[WEAPON_SYSTEM] = initDevice(deviceTable, devices::WEAPON_SYSTEM, "weaponDevice");
-		}
+		}*/
 		if (devicesClass[ILS] == nullptr)
 		{
 			devicesClass[ILS] = initDevice(deviceTable, devices::ILS, "ilsDevice");

@@ -382,7 +382,7 @@ void FlightModel::L_stab()
 		//-----------Multiplikator vor Clda eingefügt auf 1.25 auf 1.5 für schnelleres Ansprechen auf der Rollachse-------------------------------
 		//----------m_stallIndRoll verringert auf (s.u.)-----------------------------------------------------------------------------------
 		//----------Multiplikator vor m_stallMult von 0.5 auf 0.33
-	m_moment.x += m_q * ((Clb_b * m_corrBeta) + ((1.7 * Clda_b) * ((((m_elec.isAC() ? m_input.getRoll() : 0) * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD)) + ((0.55 * Cldr_b) * ((m_elec.isAC() ? m_input.getYaw() : 0) * m_rudDeflection)))
+	m_moment.x += m_q * ((Clb_b * m_corrBeta) + ((1.7 * Clda_b) * (((((m_elec.isAC() && !m_elec.isGndPwr()) ? m_input.getRoll() : 0) * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD)) + ((0.55 * Cldr_b) * (((m_elec.isAC() && !m_elec.isGndPwr()) ? m_input.getYaw() : 0) * m_rudDeflection)))
 		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (((1.35 * Clp_b) * m_state.m_omega.x) + ((1.15 * Clr_b) * m_state.m_omega.y));
 }
 
@@ -405,7 +405,7 @@ void FlightModel::M_stab()
 	//CmFlap als Negativer-Pitch-Wert für Flap-Pitch eingeführt
 	//----------------NEUE Version mit Ausschlagsbeschränkung auf max Ausschlag Backstick--------------Cm bleibt unberhürt von der Rotation-----------------------------------------------------------------------------------
 	double d1 = 1.0;
-	m_moment.z += m_k * CON_mac * ((((d1 * CmalphaNEW(m_state.m_mach) * m_cmaMultiFBW) * m_inducedPitZ) * m_corrAoA) + (d1 * -CmdeNEW(m_state.m_mach) * ((((((m_elec.isAC() ? m_input.getPitch() : 0) * m_elevDeflection)) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH() + m_autoPilot.getAutoPitch() + m_autoPilot.getFBWPitch()) * m_pitchReduceAoA) + m_stickKicker) * m_hStabDamage) + (0.70 * CmFlap(m_state.m_mach) * m_airframe.getFlapsPosition()))
+	m_moment.z += m_k * CON_mac * ((((d1 * CmalphaNEW(m_state.m_mach) * m_cmaMultiFBW) * m_inducedPitZ) * m_corrAoA) + (d1 * -CmdeNEW(m_state.m_mach) * (((((((m_elec.isAC() && !m_elec.isGndPwr()) ? m_input.getPitch() : 0) * m_elevDeflection)) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH() + m_autoPilot.getAutoPitch() + m_autoPilot.getFBWPitch()) * m_pitchReduceAoA) + m_stickKicker) * m_hStabDamage) + (0.70 * CmFlap(m_state.m_mach) * m_airframe.getFlapsPosition()))
 		+ 1 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * (((1.00 * (Cmq(m_state.m_mach) * m_cmqMultiFBW) + (m_cmqMultiFBW * m_CmqStAg)) * m_state.m_omega.z) + (((1.00 * (m_cmqMultiFBW * CmadotNEW(m_state.m_mach))) + (m_cmqMultiFBW * m_CmaDOTStAg)) * m_aoaDot));
 
 }
@@ -435,7 +435,7 @@ void FlightModel::N_stab()
 	//--------von: (((1.5 - ( 1.15 * m_stallMult)) * (Cnp_b * m_state.m_omega.x)) zu (((1.8 - ( 1.15 * m_stallMult)) * (Cnp_b * m_state.m_omega.x))
 	//--------von: ((3.1 - (1.25 * m_stallMult)) * Cnr_b * m_state.m_omega.y)) zu ((3.5 - (1.25 * m_stallMult)) * Cnr_b * m_state.m_omega.y))
 	//----von ((1.6 * -Cndr_b) * (-m_input.getYaw() * m_rudDeflection)) -> ((1.2 * -Cndr_b) * (-m_input.getYaw() * m_rudDeflection))// 
-	m_moment.y += m_q * (((3.1 * -Cnb_b) * m_corrBeta) + ((-Cnda_b * ((m_elec.isAC() ? m_input.getRoll() : 0) * m_ailDeflection)) * m_CnpStab) + ((1.2 * -Cndr_b) * (m_elec.isAC() ? -m_input.getYaw() : 0 * m_rudDeflection)))
+	m_moment.y += m_q * (((3.1 * -Cnb_b) * m_corrBeta) + ((-Cnda_b * (((m_elec.isAC() && !m_elec.isGndPwr()) ? m_input.getRoll() : 0) * m_ailDeflection)) * m_CnpStab) + ((1.2 * -Cndr_b) * ((m_elec.isAC() && !m_elec.isGndPwr()) ? -m_input.getYaw() : 0 * m_rudDeflection)))
 		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (((1.8 - (1.15 * m_stallMult)) * (Cnp_b * m_state.m_omega.x)) + ((3.5 - (1.25 * m_stallMult)) * Cnr_b * m_state.m_omega.y));
 }
 
@@ -1591,11 +1591,15 @@ void FlightModel::update(double dt)
 	double wheelChock = m_cockpitAPI.getParamNumber(m_wheelChockHandle);
 	if (wheelChock < 0.9)
 	{
-		if (m_input.getBackACar() == 1.0 && m_l_thrustForce_x < 2000.0 && m_r_thrustForce_x < 2000.0 && m_airframe.getWeightOnWheels()>0)
+		if (m_input.getBackACar() == 1.0 && m_airframe.getWeightOnWheels() > 0)
 		{
-			double power = -13000 * (m_state.m_weight / 38000.0);
+			double power = std::max(m_airframe.getIntThrottlePosition(), m_airframe.getIntThrottlePosition2()) * -19000;
 			addForce(Vec3(power, 0.0, 0.0), Vec3(-8, m_state.m_com.y, -0.8));
 			addForce(Vec3(power, 0.0, 0.0), Vec3(-8, m_state.m_com.y, 0.8));
+			if (std::max(std::max(m_input.getBrake(), m_input.getBrakeLeft()), m_input.getBrakeRight()) > 0)
+			{
+				addForce(Vec3(0, -m_state.m_weight * 9.8 * 0.1, 0), Vec3(5.5, 0, 0));
+			}
 		}
 		else
 		{

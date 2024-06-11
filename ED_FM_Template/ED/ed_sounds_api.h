@@ -19,6 +19,7 @@ typedef void (*SND_source_play)(SND_Source_id src, const struct SND_PlayParams* 
 typedef void (*SND_source_update)(SND_Source_id src, const struct SND_SourceParams* params);
 typedef void (*SND_source_stop)(SND_Source_id src);
 typedef void (*SND_source_del)(SND_Source_id src);
+typedef void (*SND_set_listener)(SND_Context_id ctx, const struct SND_ListenerParams* params);
 typedef int (*SND_source_is_playing)(SND_Source_id src);
 
 
@@ -61,6 +62,7 @@ struct ed_snd_api
 	SND_add_host snd_add_host;
 	SND_host_update snd_host_update;
 	SND_host_del snd_host_del;
+	SND_set_listener snd_set_listener;
 
 	SND_add_source snd_add_src;
 	SND_add_source_alt snd_add_src_alt;
@@ -84,6 +86,7 @@ inline ed_snd_api  ed_get_snd_api()
 	ret.snd_add_host = (SND_add_host)GetProcAddress(edSound_dll, "SND_add_host");
 	ret.snd_host_update = (SND_host_update)GetProcAddress(edSound_dll, "SND_host_update");
 	ret.snd_host_del = (SND_host_del)GetProcAddress(edSound_dll, "SND_host_del");
+	ret.snd_set_listener = (SND_set_listener)GetProcAddress(edSound_dll, "SND_set_listener");
 
 	ret.snd_add_src = (SND_add_source)GetProcAddress(edSound_dll, "SND_add_source");
 	ret.snd_add_src_alt = (SND_add_source_alt)GetProcAddress(edSound_dll, "SND_add_source_alt");
