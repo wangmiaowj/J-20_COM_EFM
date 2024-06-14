@@ -1,6 +1,6 @@
 #include "ED_FM_TemplateAPI.h"
 #include "include/FM/wHumanCustomPhysicsAPI.h"
-#define c_maxTakeoffMass 38000.0
+#define c_maxTakeoffMass 37000.0
 extern "C"
 {
 	/*/////////////////////////////////////////////////////////////////////////

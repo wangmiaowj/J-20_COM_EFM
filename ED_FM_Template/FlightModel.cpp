@@ -603,7 +603,7 @@ void FlightModel::calcAeroDeflection()
 
 	if (m_input.getPitch() >= 0.0)
 	{
-		m_elevDeflection = m_input.getPitch() * CON_hstdUP;
+		m_elevDeflection = (m_input.getPitch()+0.23) * CON_hstdUP;
 	}
 	if (m_input.getPitch() < 0.0)
 	{

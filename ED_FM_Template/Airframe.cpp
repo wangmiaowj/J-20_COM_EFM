@@ -857,7 +857,7 @@ double Airframe::setNozzlePosition(double dt) //Nozzle-Position 0-10% Thrust ope
 	{
 		NozzlePos = 0;
 	}
-
+	
 	double input = NozzlePos;
 	return m_actuatorNozzle.inputUpdate(input, dt);
 }

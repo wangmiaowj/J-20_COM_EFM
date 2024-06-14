@@ -819,6 +819,9 @@ void ed_fm_set_command(int command,
 	case iCommandGroundPowerAC:
 		s_elec->setCommand(command, value);
 		break;
+	case LaserFire:
+		sounder->setCommand(command, value);
+		break;
 	default:
 		break;
 		//printf("number %d: %f\n", command, value); //neu eingefügt um "unbekannte" Kommandos zur Konsole auszugeben
@@ -1034,6 +1037,8 @@ void ed_fm_set_draw_args_v2(float* data, size_t size)
 	//data[184] = s_airframe->getSpeedBrakePosition();//airbrake #2
 	data[325] = s_engine->getLeftFanAnimationValue();
 	data[324] = s_engine->getRightFanAnimationValue();
+	data[401] = s_airframe->getWingFoldMechanics();//Wing-Tip-Folding Mechanics anstatt Arg.Nr.8
+	data[402] = s_airframe->getHookPosition();//Hook Position statt 402 wider 25
 	data[515] = s_flightModel->getVectorPitchR();
 	data[516] = s_flightModel->getVectorPitchL();
 	data[517] = s_flightModel->getVectorYaw();

@@ -41,9 +41,11 @@ public:
 		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.airbrakeEnd);
 		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.flapRun);
 		aircraftHost->addSource(SND_PLAYMODE_LOOPED, protos.flapEnd);
+		aircraftHost->addSource(SND_PLAYMODE_ONCE, protos.laserFire);
 		cptHost->addSource(SND_PLAYMODE_ONCE, protos.APU_Start);
 		cptHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_Running);
 		cptHost->addSource(SND_PLAYMODE_LOOPED, protos.APU_End);
+		cptHost->addSource(SND_PLAYMODE_ONCE, protos.laserFireIn);
 		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.Test);
 		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.bitSucc);
 		headPhonesHost->addSource(SND_PLAYMODE_ONCE, protos.leftEngFire);
@@ -52,24 +54,25 @@ public:
 		aircraftHost->getSource(protos.APU_Start).link(cptHost->getSource(protos.APU_Start));
 		aircraftHost->getSource(protos.APU_Running).link(cptHost->getSource(protos.APU_Running));
 		aircraftHost->getSource(protos.APU_End).link(cptHost->getSource(protos.APU_End));
+		aircraftHost->getSource(protos.laserFire).link(cptHost->getSource(protos.laserFire));
 		//headPhonesHost->getSource(protos.Test).playOnce();
 
 		world3DListenerParam = std::make_unique<SND_ListenerParams>();
-		world3DListenerParam.get()->fields = 5;
-		world3DListenerParam.get()->position[0] = 0.0;
-		world3DListenerParam.get()->position[1] = 0.0;
-		world3DListenerParam.get()->position[2] = 0.0;
-		world3DListenerParam.get()->velocity[0] = 0.0;
-		world3DListenerParam.get()->velocity[1] = 0.0;
-		world3DListenerParam.get()->velocity[2] = 0.0;
-		world3DListenerParam.get()->orientation[0] = 0.0;
-		world3DListenerParam.get()->orientation[1] = 0.0;
-		world3DListenerParam.get()->orientation[2] = 0.0;
-		world3DListenerParam.get()->orientation[3] = 0.0;
-		world3DListenerParam.get()->gain = 1.0;
-		world3DListenerParam.get()->pitch = 1.0;
-		world3DListenerParam.get()->lowpass = 24000.0;
-		world3DListenerParam.get()->timestamp = 0.0;
+		world3DListenerParam->fields = 5;
+		world3DListenerParam->position[0] = 0.0;
+		world3DListenerParam->position[1] = 0.0;
+		world3DListenerParam->position[2] = 0.0;
+		world3DListenerParam->velocity[0] = 0.0;
+		world3DListenerParam->velocity[1] = 0.0;
+		world3DListenerParam->velocity[2] = 0.0;
+		world3DListenerParam->orientation[0] = 0.0;
+		world3DListenerParam->orientation[1] = 0.0;
+		world3DListenerParam->orientation[2] = 0.0;
+		world3DListenerParam->orientation[3] = 0.0;
+		world3DListenerParam->gain = 1.0;
+		world3DListenerParam->pitch = 1.0;
+		world3DListenerParam->lowpass = 24000.0;
+		world3DListenerParam->timestamp = 0.0;
 		snd.snd_set_listener(snd.WORLD_CONTEXT, world3DListenerParam.get());
 		printf("sounder init\n");
 	}
@@ -100,8 +103,8 @@ public:
 		}
 	}
 	void updateAirBrakeSnd(double dt) {
-		SoundSource& airbrakeRunSrc = aircraftHost.get()->getSource(protos.airbrakeRun);
-		SoundSource& airbrakeEndSrc = aircraftHost.get()->getSource(protos.airbrakeEnd);
+		SoundSource& airbrakeRunSrc = aircraftHost->getSource(protos.airbrakeRun);
+		SoundSource& airbrakeEndSrc = aircraftHost->getSource(protos.airbrakeEnd);
 		if (!airframe.airbrakeIsRun() && airbrakeRunSrc.isPlaying() && !airbrakeEndSrc.isPlaying())
 		{
 			airbrakeRunSrc.stop();
@@ -114,8 +117,8 @@ public:
 		}
 	}
 	void updateFlapSnd(double dt) {
-		SoundSource& flapRunSrc = aircraftHost.get()->getSource(protos.flapRun);
-		SoundSource& flapEndSrc = aircraftHost.get()->getSource(protos.flapEnd);
+		SoundSource& flapRunSrc = aircraftHost->getSource(protos.flapRun);
+		SoundSource& flapEndSrc = aircraftHost->getSource(protos.flapEnd);
 		if (!airframe.flapsIsRun() && flapRunSrc.isPlaying() && !flapEndSrc.isPlaying())
 		{
 			flapRunSrc.stop();
@@ -213,6 +216,14 @@ public:
 			}
 		}
 	}
+	void setCommand(int cmd, float value)
+	{
+		if (cmd == LaserFire)
+		{
+			SoundSource& laserFireSrc = aircraftHost->getSource(protos.laserFire);
+			laserFireSrc.playOnce();
+		}
+	}
 	void update(double dt)
 	{
 		//updateApuSnd(dt);
@@ -230,17 +241,17 @@ public:
 		headPhonesHost->update(dt, state, clock.get_currtime(), quaternion);
 		aircraftHost->update(dt, state, clock.get_currtime(), quaternion);
 		cptHost->update(dt, state, clock.get_currtime(), quaternion);
-		world3DListenerParam.get()->position[0] = state.m_worldPosition.x;
-		world3DListenerParam.get()->position[1] = state.m_worldPosition.y;
-		world3DListenerParam.get()->position[2] = state.m_worldPosition.z;
-		world3DListenerParam.get()->velocity[0] = state.m_localSpeed.x;
-		world3DListenerParam.get()->velocity[1] = state.m_localSpeed.y;
-		world3DListenerParam.get()->velocity[2] = state.m_localSpeed.z;
-		world3DListenerParam.get()->orientation[0] = quaternion.x;
-		world3DListenerParam.get()->orientation[1] = quaternion.y;
-		world3DListenerParam.get()->orientation[2] = quaternion.z;
-		world3DListenerParam.get()->orientation[3] = quaternion.w;
-		world3DListenerParam.get()->timestamp = clock.get_currtime();
+		world3DListenerParam->position[0] = state.m_worldPosition.x;
+		world3DListenerParam->position[1] = state.m_worldPosition.y;
+		world3DListenerParam->position[2] = state.m_worldPosition.z;
+		world3DListenerParam->velocity[0] = state.m_localSpeed.x;
+		world3DListenerParam->velocity[1] = state.m_localSpeed.y;
+		world3DListenerParam->velocity[2] = state.m_localSpeed.z;
+		world3DListenerParam->orientation[0] = quaternion.x;
+		world3DListenerParam->orientation[1] = quaternion.y;
+		world3DListenerParam->orientation[2] = quaternion.z;
+		world3DListenerParam->orientation[3] = quaternion.w;
+		world3DListenerParam->timestamp = clock.get_currtime();
 	}
 	void setCurrentOrientation(const Quaternion& _quaternion)
 	{
@@ -260,6 +271,8 @@ private:
 		Proto airbrakeEnd = Proto(L"Aircrafts/AirBrakeEnd", 0.739f);
 		Proto flapRun = Proto(L"Aircrafts/FlapsElectric", 4.609f);
 		Proto flapEnd = Proto(L"Aircrafts/FlapsElectricEnd", 0.542f);
+		Proto laserFire = Proto(L"Weapons/LaserFire", 1.134f, 5.0f, 5000.0f);
+		Proto laserFireIn = Proto(L"Weapons/LaserFire", 1.134f);
 	};
 	Sound& snd;
 	Engine& eng;
