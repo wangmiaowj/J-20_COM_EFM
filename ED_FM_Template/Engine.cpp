@@ -881,7 +881,7 @@ double Engine::updateBurner()
 	{
 		m_burner = 0.0;
 	}*/
-	m_burner = getRPMNorm() > 0.685 && m_hasFuel && m_ignitors1 ? ((updateSpool() - 0.8) / 0.2) : 0;
+	m_burner = getRPMNorm() > 0.685 && m_hasFuel && m_ignitors1 && nozzleIsStraight ? ((updateSpool() - 0.8) / 0.2) : 0;
 	return m_burner;
 }
 
@@ -919,7 +919,7 @@ double Engine::updateBurner2()
 	{
 		m_burner2 = 0.0;
 	}*/
-	m_burner2 = getRPMNorm2() && m_hasFuel && m_ignitors2 > 0.685 ? ((updateSpool2() - 0.8) / 0.2):0;
+	m_burner2 = getRPMNorm2() > 0.685 && m_hasFuel && m_ignitors2 && nozzleIsStraight ? ((updateSpool2() - 0.8) / 0.2):0;
 	return m_burner2;
 }
 
